@@ -9,6 +9,8 @@ import { Icon } from "@iconify/react";
 import { useRouter } from "next/router";
 import NavLink from "@/components/NavLink";
 import Image from "next/image";
+import { useAuth } from "@/contexts/AuthContext";
+import { Avatar, Menu, MenuItem, ListItemIcon, ListItemText, Divider } from "@mui/material";
 
 interface Props {
   darkMode: boolean;
@@ -17,11 +19,36 @@ interface Props {
 
 export default function NavBar({ darkMode, switchDarkMode }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const router = useRouter();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     setDrawerOpen(false);
   }, [router.pathname]);
+
+  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleProfile = () => {
+    handleProfileMenuClose();
+    router.push("/profile");
+  };
+
+  const handleLogout = async () => {
+    try {
+      handleProfileMenuClose();
+      await logout();
+      router.push("/auth/login");
+    } catch (error) {
+      console.error("Failed to log out", error);
+    }
+  };
 
   return (
     <Box sx={{ flexGrow: 1, display: "flex" }}>
@@ -60,6 +87,79 @@ export default function NavBar({ darkMode, switchDarkMode }: Props) {
               ChessEasy
             </Typography>
           </NavLink>
+          <Box sx={{ flexGrow: 1 }} />
+          {user && (
+            <>
+              <IconButton
+                onClick={handleProfileMenuOpen}
+                size="small"
+                sx={{ ml: 2 }}
+                aria-controls={Boolean(anchorEl) ? 'account-menu' : undefined}
+                aria-haspopup="true"
+                aria-expanded={Boolean(anchorEl) ? 'true' : undefined}
+              >
+                <Avatar
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    bgcolor: "primary.main",
+                    fontSize: "1rem",
+                  }}
+                >
+                  {user.email?.[0].toUpperCase()}
+                </Avatar>
+              </IconButton>
+              <Menu
+                anchorEl={anchorEl}
+                id="account-menu"
+                open={Boolean(anchorEl)}
+                onClose={handleProfileMenuClose}
+                onClick={handleProfileMenuClose}
+                PaperProps={{
+                  elevation: 0,
+                  sx: {
+                    overflow: 'visible',
+                    filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
+                    mt: 1.5,
+                    '& .MuiAvatar-root': {
+                      width: 32,
+                      height: 32,
+                      ml: -0.5,
+                      mr: 1,
+                    },
+                    '&:before': {
+                      content: '""',
+                      display: 'block',
+                      position: 'absolute',
+                      top: 0,
+                      right: 14,
+                      width: 10,
+                      height: 10,
+                      bgcolor: 'background.paper',
+                      transform: 'translateY(-50%) rotate(45deg)',
+                      zIndex: 0,
+                    },
+                  },
+                }}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+              >
+                <MenuItem onClick={handleProfile}>
+                  <ListItemIcon>
+                    <Icon icon="mdi:account" width={24} />
+                  </ListItemIcon>
+                  <ListItemText>Profile</ListItemText>
+                </MenuItem>
+                <Divider />
+                <MenuItem onClick={handleLogout}>
+                  <ListItemIcon>
+                    <Icon icon="mdi:logout" width={24} />
+                  </ListItemIcon>
+                  <ListItemText>Sign Out</ListItemText>
+                </MenuItem>
+              </Menu>
+            </>
+          )}
           <IconButton
             sx={{ ml: "min(0.6rem, 0.8vw)" }}
             onClick={switchDarkMode}

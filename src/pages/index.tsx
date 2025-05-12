@@ -26,6 +26,7 @@ import { Icon } from "@iconify/react";
 import EngineSettingsButton from "@/sections/engineSettings/engineSettingsButton";
 import GraphTab from "@/sections/analysis/panelBody/graphTab";
 import { PageTitle } from "@/components/pageTitle";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 export default function GameReview() {
   const theme = useTheme();
@@ -58,136 +59,138 @@ export default function GameReview() {
   }, [isGameLoaded, gameEval, tab]);
 
   return (
-    <Grid container gap={4} justifyContent="space-evenly" alignItems="start">
-      <PageTitle title="Chesskit Game Review" />
+    <ProtectedRoute>
+      <Grid container gap={4} justifyContent="space-evenly" alignItems="start">
+        <PageTitle title="Chesskit Game Review" />
 
-      <Board />
+        <Board />
 
-      <Grid
-        container
-        justifyContent="center"
-        alignItems="center"
-        borderRadius={2}
-        border={1}
-        borderColor={"secondary.main"}
-        sx={{
-          backgroundColor: "secondary.main",
-          borderColor: "primary.main",
-          borderWidth: 2,
-          boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)",
-        }}
-        padding={2}
-        style={{
-          maxWidth: "1200px",
-        }}
-        rowGap={2}
-        maxHeight={{ lg: "calc(95vh - 80px)", xs: "900px" }}
-        display="grid"
-        gridTemplateRows="repeat(3, auto) fit-content(100%)"
-        marginTop={isLgOrGreater && window.innerHeight > 780 ? 4 : 0}
-        size={{
-          xs: 12,
-          lg: "grow",
-        }}
-      >
-        {isLgOrGreater ? (
-          <PanelHeader key="analysis-panel-header" />
-        ) : (
-          <PanelToolBar key="review-panel-toolbar" />
-        )}
-
-        {!isLgOrGreater && !gameEval && <Divider sx={{ marginX: "5%" }} />}
-        {!isLgOrGreater && !gameEval && (
-          <PanelHeader key="analysis-panel-header" />
-        )}
-
-        <Box
+        <Grid
+          container
+          justifyContent="center"
+          alignItems="center"
+          borderRadius={2}
+          border={1}
+          borderColor={"secondary.main"}
           sx={{
-            borderBottom: 1,
-            borderColor: "divider",
-            marginX: { sm: "5%", xs: undefined },
+            backgroundColor: "secondary.main",
+            borderColor: "primary.main",
+            borderWidth: 2,
+            boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)",
+          }}
+          padding={2}
+          style={{
+            maxWidth: "1200px",
+          }}
+          rowGap={2}
+          maxHeight={{ lg: "calc(95vh - 80px)", xs: "900px" }}
+          display="grid"
+          gridTemplateRows="repeat(3, auto) fit-content(100%)"
+          marginTop={isLgOrGreater && window.innerHeight > 780 ? 4 : 0}
+          size={{
+            xs: 12,
+            lg: "grow",
           }}
         >
-          <Tabs
-            value={tab}
-            onChange={(_, newValue) => setTab(newValue)}
-            aria-label="basic tabs example"
-            variant="fullWidth"
-            sx={{ minHeight: 0 }}
-          >
-            <Tab
-              label="Analysis"
-              id="tab0"
-              icon={<Icon icon="mdi:magnify" color="#27f019" height={15} />}
-              iconPosition="start"
-              sx={{
-                textTransform: "none",
-                minHeight: 15,
-                padding: "5px 0em 12px",
-              }}
-              disableFocusRipple
-            />
-
-            <Tab
-              label="Moves"
-              id="tab1"
-              icon={
-                <Icon
-                  icon="mdi:format-list-bulleted"
-                  color="#27f019"
-                  height={15}
-                />
-              }
-              iconPosition="start"
-              sx={{
-                textTransform: "none",
-                minHeight: 15,
-                display: isGameLoaded ? undefined : "none",
-                padding: "5px 0em 12px",
-              }}
-              disableFocusRipple
-            />
-
-            <Tab
-              label="Graph"
-              id="tab2"
-              icon={<Icon icon="mdi:chart-line" color="#27f019" height={15} />}
-              iconPosition="start"
-              sx={{
-                textTransform: "none",
-                minHeight: 15,
-                display: gameEval ? undefined : "none",
-                padding: "5px 0em 12px",
-              }}
-              disableFocusRipple
-            />
-          </Tabs>
-        </Box>
-
-        <AnalysisTab role="tabpanel" hidden={tab !== 0} id="tabContent0" />
-
-        <ClassificationTab
-          role="tabpanel"
-          hidden={tab !== 1}
-          id="tabContent1"
-        />
-
-        <GraphTab role="tabpanel" hidden={tab !== 2} id="tabContent2" />
-
-        {isLgOrGreater && (
-          <Box>
-            <Divider sx={{ marginX: "5%", marginBottom: 1.5 }} />
+          {isLgOrGreater ? (
+            <PanelHeader key="analysis-panel-header" />
+          ) : (
             <PanelToolBar key="review-panel-toolbar" />
+          )}
+
+          {!isLgOrGreater && !gameEval && <Divider sx={{ marginX: "5%" }} />}
+          {!isLgOrGreater && !gameEval && (
+            <PanelHeader key="analysis-panel-header" />
+          )}
+
+          <Box
+            sx={{
+              borderBottom: 1,
+              borderColor: "divider",
+              marginX: { sm: "5%", xs: undefined },
+            }}
+          >
+            <Tabs
+              value={tab}
+              onChange={(_, newValue) => setTab(newValue)}
+              aria-label="basic tabs example"
+              variant="fullWidth"
+              sx={{ minHeight: 0 }}
+            >
+              <Tab
+                label="Analysis"
+                id="tab0"
+                icon={<Icon icon="mdi:magnify" color="#27f019" height={15} />}
+                iconPosition="start"
+                sx={{
+                  textTransform: "none",
+                  minHeight: 15,
+                  padding: "5px 0em 12px",
+                }}
+                disableFocusRipple
+              />
+
+              <Tab
+                label="Moves"
+                id="tab1"
+                icon={
+                  <Icon
+                    icon="mdi:format-list-bulleted"
+                    color="#27f019"
+                    height={15}
+                  />
+                }
+                iconPosition="start"
+                sx={{
+                  textTransform: "none",
+                  minHeight: 15,
+                  display: isGameLoaded ? undefined : "none",
+                  padding: "5px 0em 12px",
+                }}
+                disableFocusRipple
+              />
+
+              <Tab
+                label="Graph"
+                id="tab2"
+                icon={<Icon icon="mdi:chart-line" color="#27f019" height={15} />}
+                iconPosition="start"
+                sx={{
+                  textTransform: "none",
+                  minHeight: 15,
+                  display: gameEval ? undefined : "none",
+                  padding: "5px 0em 12px",
+                }}
+                disableFocusRipple
+              />
+            </Tabs>
           </Box>
-        )}
 
-        {!isLgOrGreater && gameEval && <Divider sx={{ marginX: "5%" }} />}
-        {!isLgOrGreater && gameEval && (
-          <PanelHeader key="analysis-panel-header" />
-        )}
+          <AnalysisTab role="tabpanel" hidden={tab !== 0} id="tabContent0" />
+
+          <ClassificationTab
+            role="tabpanel"
+            hidden={tab !== 1}
+            id="tabContent1"
+          />
+
+          <GraphTab role="tabpanel" hidden={tab !== 2} id="tabContent2" />
+
+          {isLgOrGreater && (
+            <Box>
+              <Divider sx={{ marginX: "5%", marginBottom: 1.5 }} />
+              <PanelToolBar key="review-panel-toolbar" />
+            </Box>
+          )}
+
+          {!isLgOrGreater && gameEval && <Divider sx={{ marginX: "5%" }} />}
+          {!isLgOrGreater && gameEval && (
+            <PanelHeader key="analysis-panel-header" />
+          )}
+        </Grid>
+
+        <EngineSettingsButton />
       </Grid>
-
-      <EngineSettingsButton />
-    </Grid>
+    </ProtectedRoute>
   );
 }

@@ -1,36 +1,35 @@
-import { FirebaseOptions, initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
+import { getAuth } from "firebase/auth";
 import { getAnalytics, isSupported, logEvent } from "firebase/analytics";
 
-const firebaseConfig: FirebaseOptions | undefined = process.env
-  .NEXT_PUBLIC_FIREBASE_PROJECT_ID
-  ? {
-      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-      measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
-    }
-  : undefined;
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+};
 
-const app = firebaseConfig ? initializeApp(firebaseConfig) : undefined;
+// Initialize Firebase
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const auth = getAuth(app);
+
+let analytics: any;
 
 isSupported().then((supported) => {
-  if (supported && app) {
-    getAnalytics(app);
+  if (supported && typeof window !== "undefined") {
+    analytics = getAnalytics(app);
   }
 });
 
-export const logAnalyticsEvent = async (
+export const logAnalyticsEvent = (
   eventName: string,
-  eventParams?: Record<string, unknown>
+  eventParams?: { [key: string]: any }
 ) => {
-  if (window.location.hostname === "localhost") return;
-
-  const supported = await isSupported();
-  if (!supported || !app) return;
-
-  const analytics = getAnalytics(app);
+  if (!analytics) return;
   logEvent(analytics, eventName, eventParams);
 };
+
+export { app, auth };
