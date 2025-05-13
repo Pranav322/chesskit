@@ -67,6 +67,16 @@ export const useGameDatabase = (shouldFetchGames?: boolean) => {
     [db, loadGames]
   );
 
+  const updateGame = useCallback(
+    async (gameId: number, updatedGame: Game) => {
+      if (!db) throw new Error("Database not initialized");
+
+      await db.put("games", updatedGame);
+      loadGames();
+    },
+    [db, loadGames]
+  );
+
   const setGameEval = useCallback(
     async (gameId: number, evaluation: GameEval) => {
       if (!db) throw new Error("Database not initialized");
@@ -120,6 +130,7 @@ export const useGameDatabase = (shouldFetchGames?: boolean) => {
 
   return {
     addGame,
+    updateGame,
     setGameEval,
     getGame,
     deleteGame,

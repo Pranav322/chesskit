@@ -13,6 +13,7 @@ export interface Game {
   eval?: GameEval;
   termination?: string;
   timeControl?: string;
+  isFavorite?: boolean;
 }
 
 export interface Player {

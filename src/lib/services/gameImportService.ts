@@ -6,16 +6,19 @@ import { ChessPlatformAPI } from '../api/types';
 import { FirestoreService } from './firestore';
 import { ImportedGameData } from '@/types/database';
 import { Timestamp } from 'firebase/firestore';
+import { AutoTagService } from './autoTagService';
 
 export class GameImportService {
   private lichessAPI: LichessAPI;
   private chessComAPI: ChessComAPI;
   private firestoreService: FirestoreService;
+  private autoTagService: AutoTagService;
 
   constructor() {
     this.lichessAPI = new LichessAPI();
     this.chessComAPI = new ChessComAPI();
     this.firestoreService = new FirestoreService();
+    this.autoTagService = new AutoTagService();
   }
 
   private getAPI(platform: GameOrigin): ChessPlatformAPI {
@@ -84,6 +87,12 @@ export class GameImportService {
         
         await Promise.all(chunk.map(async (game) => {
           try {
+            // Auto-tag the game if enabled
+            let autoTags = undefined;
+            if (options.autoTag) {
+              autoTags = await this.autoTagService.tagGame(game.pgn);
+            }
+
             const gameData: Omit<ImportedGameData, 'id'> = {
               userId,
               source: options.platform,
@@ -92,7 +101,8 @@ export class GameImportService {
               metadata: {
                 date: Timestamp.fromMillis(game.end_time || Date.now()),
                 platform: options.platform,
-                timeControl: game.time_class || undefined,
+                timeControl: autoTags?.timeControl?.type || game.time_class,
+                opening: autoTags?.opening,
                 result: this.extractResult(game.pgn),
                 white: {
                   name: game.white?.username || 'Unknown',
@@ -104,6 +114,7 @@ export class GameImportService {
                 },
               },
               importedAt: Timestamp.now(),
+              tags: autoTags?.tags || [],
             };
 
             await this.firestoreService.saveGame(gameData);

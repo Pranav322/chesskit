@@ -21,6 +21,40 @@ export class FirestoreService {
   private gamesCollection = collection(db, 'games');
   private importHistoryCollection = collection(db, 'importHistory');
   private importProgressCollection = collection(db, 'importProgress');
+  private backgroundJobsCollection = collection(db, 'backgroundJobs');
+
+  // Background Jobs Methods
+  async createBackgroundJob<T extends object>(jobData: T): Promise<string> {
+    const jobRef = doc(this.backgroundJobsCollection);
+    await setDoc(jobRef, jobData);
+    return jobRef.id;
+  }
+
+  async updateBackgroundJob(jobId: string, update: object): Promise<void> {
+    const jobRef = doc(this.backgroundJobsCollection, jobId);
+    await updateDoc(jobRef, update);
+  }
+
+  async getBackgroundJob<T>(jobId: string): Promise<T | null> {
+    const jobRef = doc(this.backgroundJobsCollection, jobId);
+    const jobDoc = await getDoc(jobRef);
+    return jobDoc.exists() ? { id: jobDoc.id, ...jobDoc.data() } as T : null;
+  }
+
+  async getNextPendingJob<T>(): Promise<T | null> {
+    const jobQuery = query(
+      this.backgroundJobsCollection,
+      where('status', '==', 'pending'),
+      orderBy('createdAt', 'asc'),
+      limit(1)
+    );
+
+    const snapshot = await getDocs(jobQuery);
+    if (snapshot.empty) return null;
+
+    const doc = snapshot.docs[0];
+    return { id: doc.id, ...doc.data() } as T;
+  }
 
   // Import Progress Methods
   async createImportProgress(

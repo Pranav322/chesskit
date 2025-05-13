@@ -21,7 +21,7 @@ service cloud.firestore {
     match /importHistory/{historyId} {
       allow read: if isOwner(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
-      allow update, delete: if isOwner(resource.data.userId);
+      allow update: if isOwner(resource.data.userId);
     }
 
     // Import progress collection
@@ -29,7 +29,13 @@ service cloud.firestore {
       allow read: if isOwner(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
       allow update: if isOwner(resource.data.userId);
-      allow delete: if isOwner(resource.data.userId);
+    }
+
+    // Background jobs collection
+    match /backgroundJobs/{jobId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+      allow update: if isOwner(resource.data.userId);
     }
   }
 } 

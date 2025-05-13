@@ -17,12 +17,15 @@
     "@fontsource/roboto": "^5.1.0",
     "@fontsource/roboto-slab": "^5.2.5",
     "@iconify/react": "^5.1.0",
+    "@mui/icons-material": "^6.3.0",
     "@mui/lab": "^6.0.0-beta.21",
     "@mui/material": "^6.3.0",
     "@mui/x-data-grid": "^7.23.5",
+    "@mui/x-date-pickers": "^8.3.0",
     "@sentry/nextjs": "^8.47.0",
     "@tanstack/react-query": "^5.75.5",
     "chess.js": "^1.2.0",
+    "date-fns": "^4.1.0",
     "firebase": "^11.7.1",
     "idb": "^8.0.1",
     "jotai": "^2.11.0",
@@ -41,6 +44,7 @@
     "@types/tinycolor2": "^1.4.6",
     "@typescript-eslint/eslint-plugin": "^8.18.2",
     "@typescript-eslint/parser": "^8.18.2",
+    "autoprefixer": "^10.4.21",
     "aws-cdk": "^2.1007.0",
     "aws-cdk-lib": "^2.186.0",
     "constructs": "^10.0.0",
@@ -50,6 +54,8 @@
     "eslint-plugin-deprecation": "^3.0.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-prettier": "^5.2.1",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.1.6",
     "typescript": "^5.7.2"
   }
 }
