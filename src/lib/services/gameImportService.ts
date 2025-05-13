@@ -3,14 +3,19 @@ import { GameOrigin } from '@/types/enums';
 import { LichessAPI } from '../api/lichessAPI';
 import { ChessComAPI } from '../api/chessComAPI';
 import { ChessPlatformAPI } from '../api/types';
+import { FirestoreService } from './firestore';
+import { ImportedGameData } from '@/types/database';
+import { Timestamp } from 'firebase/firestore';
 
 export class GameImportService {
   private lichessAPI: LichessAPI;
   private chessComAPI: ChessComAPI;
+  private firestoreService: FirestoreService;
 
   constructor() {
     this.lichessAPI = new LichessAPI();
     this.chessComAPI = new ChessComAPI();
+    this.firestoreService = new FirestoreService();
   }
 
   private getAPI(platform: GameOrigin): ChessPlatformAPI {
@@ -45,6 +50,18 @@ export class GameImportService {
       return;
     }
 
+    // Create import progress record
+    const progressId = await this.firestoreService.createImportProgress(
+      userId,
+      options.platform,
+      options.count,
+      {
+        username,
+        autoTag: options.autoTag,
+        backgroundImport: options.backgroundImport,
+      }
+    );
+
     // Start import
     onProgress({
       total: options.count,
@@ -60,24 +77,53 @@ export class GameImportService {
         throw new Error(error);
       }
 
-      // Process games in chunks to avoid overwhelming the system
+      // Process games in chunks to avoid overwhelming Firestore
       const chunkSize = 10;
       for (let i = 0; i < games.length; i += chunkSize) {
         const chunk = games.slice(i, i + chunkSize);
         
-        // Process chunk (in Phase 3, this will be done in background)
         await Promise.all(chunk.map(async (game) => {
           try {
-            // TODO: Store game in database (Phase 3)
-            // For now, just simulate processing time
-            await new Promise(resolve => setTimeout(resolve, 100));
+            const gameData: Omit<ImportedGameData, 'id'> = {
+              userId,
+              source: options.platform,
+              originalId: game.id || `${options.platform}-${Date.now()}`,
+              pgn: game.pgn,
+              metadata: {
+                date: Timestamp.fromMillis(game.end_time || Date.now()),
+                platform: options.platform,
+                timeControl: game.time_class || undefined,
+                result: this.extractResult(game.pgn),
+                white: {
+                  name: game.white?.username || 'Unknown',
+                  rating: game.white?.rating,
+                },
+                black: {
+                  name: game.black?.username || 'Unknown',
+                  rating: game.black?.rating,
+                },
+              },
+              importedAt: Timestamp.now(),
+            };
+
+            await this.firestoreService.saveGame(gameData);
             
+            // Update progress
+            await this.firestoreService.updateImportProgress(progressId, {
+              completedGames: i + 1,
+              status: i + 1 >= games.length ? 'completed' : 'importing',
+            });
+
             onProgress(prev => ({
               ...prev,
               completed: prev.completed + 1,
               status: prev.completed + 1 >= prev.total ? 'completed' : 'importing',
             }));
           } catch (error) {
+            await this.firestoreService.updateImportProgress(progressId, {
+              failedGames: i + 1,
+            });
+
             onProgress(prev => ({
               ...prev,
               failed: prev.failed + 1,
@@ -86,16 +132,52 @@ export class GameImportService {
         }));
       }
 
+      // Create import history record
+      await this.firestoreService.createImportHistory(
+        userId,
+        options.platform,
+        'completed',
+        {
+          totalGames: games.length,
+          completedGames: games.length,
+          failedGames: 0,
+        }
+      );
+
       onProgress(prev => ({
         ...prev,
         status: 'completed',
       }));
     } catch (error) {
+      // Update import progress as failed
+      await this.firestoreService.updateImportProgress(progressId, {
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+      });
+
+      // Create failed import history record
+      await this.firestoreService.createImportHistory(
+        userId,
+        options.platform,
+        'failed',
+        {
+          totalGames: options.count,
+          completedGames: 0,
+          failedGames: options.count,
+        },
+        error instanceof Error ? error.message : 'Unknown error occurred'
+      );
+
       onProgress(prev => ({
         ...prev,
         status: 'failed',
         error: error instanceof Error ? error.message : 'Unknown error occurred',
       }));
     }
+  }
+
+  private extractResult(pgn: string): string | undefined {
+    const resultMatch = pgn.match(/\[Result "(.*?)"\]/);
+    return resultMatch ? resultMatch[1] : undefined;
   }
 } 
