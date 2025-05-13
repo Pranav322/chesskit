@@ -5,6 +5,7 @@ import { GameImportOptions, ImportProgress as ImportProgressType } from '@/types
 import { useAuth } from '@/contexts/AuthContext';
 import { GameImportService } from '@/lib/services/gameImportService';
 import { Icon } from '@iconify/react';
+import { Box, Typography, TextField, InputAdornment, Paper, Grid } from '@mui/material';
 
 const initialProgress: ImportProgressType = {
   total: 0,
@@ -52,60 +53,75 @@ export const GameImportContainer: React.FC = () => {
   };
 
   return (
-    <div className="space-y-10">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-100 shadow-sm">
-          <div className="flex items-center justify-center mb-6">
-            <Icon icon="mdi:chess" className="text-3xl text-blue-600 mr-3" />
-            <h2 className="text-2xl font-semibold text-gray-900">Platform Details</h2>
-          </div>
-          <div className="space-y-6">
-            <div>
-              <label htmlFor="username" className="block text-base font-medium text-gray-700 mb-2">
-                Chess Platform Username
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
+    <Box sx={{ p: 3 }}>
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+              <Icon icon="mdi:chess" style={{ fontSize: '28px', color: '#ed8936', marginRight: '12px' }} />
+              <Typography variant="h6">
+                Platform Details
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <Box>
+                <Typography 
+                  component="label" 
+                  htmlFor="username" 
+                  variant="subtitle2"
+                  sx={{ display: 'block', mb: 1 }}
+                >
+                  Chess Platform Username
+                </Typography>
+                <TextField
+                  fullWidth
                   id="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-5 py-4 text-lg border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm"
                   placeholder="Enter your username"
                   disabled={progress.status === 'importing'}
+                  size="medium"
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <Icon icon="mdi:account" style={{ fontSize: '20px' }} />
+                      </InputAdornment>
+                    )
+                  }}
                 />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                  <Icon icon="mdi:account" className="text-2xl text-gray-400" />
-                </div>
-              </div>
-            </div>
-            <GameImportForm
-              onSubmit={handleImport}
-              isLoading={progress.status === 'importing'}
-            />
-          </div>
-        </div>
-      </div>
+              </Box>
+              <GameImportForm
+                onSubmit={handleImport}
+                isLoading={progress.status === 'importing'}
+              />
+            </Box>
+          </Paper>
+        </Grid>
 
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-center mb-6">
-            <Icon icon="mdi:progress-check" className="text-3xl text-green-600 mr-3" />
-            <h2 className="text-2xl font-semibold text-gray-900">Import Progress</h2>
-          </div>
-          {progress.status !== 'idle' && (
-            <div className="mt-4">
-              <ImportProgress progress={progress} />
-            </div>
-          )}
-          {progress.status === 'idle' && (
-            <div className="text-center py-12 text-gray-500">
-              <Icon icon="mdi:information" className="text-5xl mx-auto mb-4" />
-              <p className="text-lg">Enter your username and configure import settings to begin</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+        <Grid item xs={12}>
+          <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+              <Icon icon="mdi:progress-check" style={{ fontSize: '28px', color: '#ed8936', marginRight: '12px' }} />
+              <Typography variant="h6">
+                Import Progress
+              </Typography>
+            </Box>
+            {progress.status !== 'idle' && (
+              <Box sx={{ mt: 2 }}>
+                <ImportProgress progress={progress} />
+              </Box>
+            )}
+            {progress.status === 'idle' && (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Icon icon="mdi:information" style={{ fontSize: '40px', marginBottom: '16px' }} />
+                <Typography color="text.secondary">
+                  Enter your username and configure import settings to begin
+                </Typography>
+              </Box>
+            )}
+          </Paper>
+        </Grid>
+      </Grid>
+    </Box>
   );
 }; 

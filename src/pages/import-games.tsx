@@ -4,6 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { Icon } from '@iconify/react';
+import { PageTitle } from '@/components/pageTitle';
+import { Box, Container, Typography, CircularProgress, Grid, Paper } from '@mui/material';
 
 const ImportGamesPage: NextPage = () => {
   const { user, loading } = useAuth();
@@ -17,9 +19,9 @@ const ImportGamesPage: NextPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
+      <Box display="flex" alignItems="center" justifyContent="center" height="100vh">
+        <CircularProgress />
+      </Box>
     );
   }
 
@@ -28,24 +30,29 @@ const ImportGamesPage: NextPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      <div className="container mx-auto px-4 py-16">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center justify-center p-3 bg-blue-50 rounded-full mb-6">
-              <Icon icon="mdi:database-import" className="text-5xl text-blue-600" />
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Import Your Chess Games</h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Import your games from Lichess or Chess.com to analyze and improve your play
-            </p>
-          </div>
-          <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12">
-            <GameImportContainer />
-          </div>
-        </div>
-      </div>
-    </div>
+    <Box sx={{ height: '100%', width: '100%', p: 2 }}>
+      <PageTitle title="Import Chess Games" />
+      
+      <Grid container justifyContent="center" alignItems="center" sx={{ mb: 4 }}>
+        <Grid item xs={12} sx={{ textAlign: 'center' }}>
+          <Box sx={{ display: 'inline-flex', p: 2, mb: 2 }}>
+            <Icon icon="mdi:database-import" style={{ fontSize: '40px', color: '#ed8936' }} />
+          </Box>
+          <Typography variant="h4" sx={{ mb: 1, fontWeight: 'bold' }}>
+            Import Your Chess Games
+          </Typography>
+          <Typography variant="subtitle1" color="text.secondary" sx={{ maxWidth: 600, mx: 'auto' }}>
+            Import your games from Lichess or Chess.com to analyze and improve your play
+          </Typography>
+        </Grid>
+      </Grid>
+
+      <Box sx={{ maxWidth: 'lg', mx: 'auto' }}>
+        <Paper elevation={0} sx={{ borderRadius: 3 }}>
+          <GameImportContainer />
+        </Paper>
+      </Box>
+    </Box>
   );
 };
 

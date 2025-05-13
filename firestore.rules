@@ -37,5 +37,17 @@ service cloud.firestore {
       allow create: if isOwner(request.resource.data.userId);
       allow update: if isOwner(resource.data.userId);
     }
+
+    // User insights reports
+    match /users/{userId}/insights/{docId} {
+      allow read, write: if isOwner(userId);
+    }
   }
-} 
+}
+
+
+
+
+
+
+

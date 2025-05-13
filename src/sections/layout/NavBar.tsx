@@ -78,10 +78,10 @@ export default function NavBar({ darkMode, switchDarkMode }: Props) {
           <Image
             src="/favicon-32x32.png"
             alt="ChessEasy logo"
-            width={32}
+            width={150}
             height={32}
           />
-          <NavLink href="/">
+          {/* <NavLink href="/">
             <Typography
               variant="h6"
               component="div"
@@ -93,7 +93,7 @@ export default function NavBar({ darkMode, switchDarkMode }: Props) {
             >
               ChessEasy
             </Typography>
-          </NavLink>
+          </NavLink> */}
           <Box sx={{ flexGrow: 1 }} />
           {user && (
             <>
