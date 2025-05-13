@@ -6,6 +6,7 @@ import { openDB, DBSchema, IDBPDatabase } from "idb";
 import { atom, useAtom } from "jotai";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface GameDatabaseSchema extends DBSchema {
   games: {
@@ -22,6 +23,7 @@ export const useGameDatabase = (shouldFetchGames?: boolean) => {
   const [games, setGames] = useAtom(gamesAtom);
   const [fetchGames, setFetchGames] = useAtom(fetchGamesAtom);
   const [gameFromUrl, setGameFromUrl] = useState<Game | undefined>(undefined);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (shouldFetchGames !== undefined) {
@@ -52,6 +54,22 @@ export const useGameDatabase = (shouldFetchGames?: boolean) => {
   useEffect(() => {
     loadGames();
   }, [loadGames]);
+
+  const getUserGames = useCallback(async (_userId: string) => {
+    if (!db) throw new Error("Database not initialized");
+    if (!user) throw new Error("User not authenticated");
+    
+    const games = await db.getAll("games");
+    
+    // Ensure all required properties exist
+    return games.map(game => ({
+      ...game,
+      result: game.result || '?',
+      white: game.white || { name: 'White' },
+      black: game.black || { name: 'Black' },
+      metadata: game.metadata || { white: game.white || { name: 'White' }, black: game.black || { name: 'Black' } }
+    }));
+  }, [db, user]);
 
   const addGame = useCallback(
     async (game: Chess) => {
@@ -134,6 +152,7 @@ export const useGameDatabase = (shouldFetchGames?: boolean) => {
     setGameEval,
     getGame,
     deleteGame,
+    getUserGames,
     games,
     isReady,
     gameFromUrl,

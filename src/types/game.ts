@@ -14,6 +14,10 @@ export interface Game {
   termination?: string;
   timeControl?: string;
   isFavorite?: boolean;
+  metadata?: {
+    white: Player;
+    black: Player;
+  };
 }
 
 export interface Player {

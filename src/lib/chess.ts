@@ -19,8 +19,11 @@ export const getEvaluateGameParams = (game: Chess): EvaluateGameParams => {
 
 export const getGameFromPgn = (pgn: string): Chess => {
   const game = new Chess();
-  game.loadPgn(pgn);
-
+  try {
+    game.loadPgn(pgn);
+  } catch (error) {
+    throw new Error("Invalid PGN format");
+  }
   return game;
 };
 
@@ -47,14 +50,18 @@ export const formatGameToDatabase = (game: Chess): Omit<Game, "id"> => {
   };
 };
 
-export const getGameToSave = (game: Chess, board: Chess): Chess => {
+export const getGameToSave = (
+  game: Chess,
+  board: Chess,
+  params: { white?: Player; black?: Player; resigned?: Color; currentUser?: string } = {}
+): Chess => {
   if (game.history().length) return game;
-  return setGameHeaders(board);
+  return setGameHeaders(board, params);
 };
 
 export const setGameHeaders = (
   game: Chess,
-  params: { white?: Player; black?: Player; resigned?: Color } = {}
+  params: { white?: Player; black?: Player; resigned?: Color; currentUser?: string } = {}
 ): Chess => {
   game.setHeader("Event", "Chesskit Game");
   game.setHeader("Site", "Chesskit.org");
@@ -63,10 +70,24 @@ export const setGameHeaders = (
     new Date().toISOString().split("T")[0].replaceAll("-", ".")
   );
 
-  const { white, black, resigned } = params;
+  const { white, black, resigned, currentUser } = params;
 
-  if (white?.name) game.setHeader("White", white.name);
-  if (black?.name) game.setHeader("Black", black.name);
+  // Set player names, defaulting to the current user's display name for the white player
+  if (white?.name) {
+    game.setHeader("White", white.name);
+  } else if (currentUser) {
+    game.setHeader("White", currentUser);
+  }
+
+  if (black?.name) {
+    game.setHeader("Black", black.name);
+  } else if (!white?.name && !currentUser) {
+    // If no white player was set and no current user, use default "Black"
+    game.setHeader("Black", "Black");
+  } else {
+    // If white is set (either through params or currentUser), set black as computer
+    game.setHeader("Black", "Computer");
+  }
 
   if (white?.rating) game.setHeader("WhiteElo", `${white.rating}`);
   if (black?.rating) game.setHeader("BlackElo", `${black.rating}`);
