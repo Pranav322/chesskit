@@ -22,6 +22,12 @@ const MenuOptions = [
     icon: "streamline:database",
     href: "/database",
   },
+  {
+    text: "Import Games",
+    icon: "mdi:database-import",
+    href: "/import-games",
+    requiresAuth: true,
+  },
 ];
 
 interface Props {
@@ -42,12 +48,16 @@ export default function NavMenu({ open, onClose }: Props) {
     }
   };
 
+  const filteredMenuOptions = MenuOptions.filter(
+    option => !option.requiresAuth || user
+  );
+
   return (
     <Drawer anchor="left" open={open} onClose={onClose}>
       <Toolbar />
       <Box sx={{ width: 250, overflow: "hidden" }}>
         <List>
-          {MenuOptions.map(({ text, icon, href }) => (
+          {filteredMenuOptions.map(({ text, icon, href }) => (
             <ListItem key={text} disablePadding sx={{ margin: 0.7 }}>
               <NavLink href={href}>
                 <ListItemButton onClick={onClose}>
