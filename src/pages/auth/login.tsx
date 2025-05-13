@@ -32,7 +32,7 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-    
+
     setIsLoading(true);
     try {
       setError("");
@@ -94,10 +94,14 @@ export default function Login() {
             setError("Sign in cancelled. Please try again");
             break;
           case "auth/popup-blocked":
-            setError("Pop-up blocked by browser. Please allow pop-ups for this site");
+            setError(
+              "Pop-up blocked by browser. Please allow pop-ups for this site"
+            );
             break;
           case "auth/account-exists-with-different-credential":
-            setError("An account already exists with the same email but different sign-in method");
+            setError(
+              "An account already exists with the same email but different sign-in method"
+            );
             break;
           default:
             setError("Failed to sign in with Google. Please try again");
@@ -128,9 +132,9 @@ export default function Login() {
             boxShadow: 3,
           }}
         >
-          <Typography 
-            component="h1" 
-            variant="h4" 
+          <Typography
+            component="h1"
+            variant="h4"
             sx={{ mb: 3, fontWeight: 600 }}
           >
             Welcome Back
@@ -212,11 +216,11 @@ export default function Login() {
               }}
             />
 
-            <Box sx={{ mt: 2, mb: 2, display: "flex", justifyContent: "flex-end" }}>
+            <Box
+              sx={{ mt: 2, mb: 2, display: "flex", justifyContent: "flex-end" }}
+            >
               <Link href="/auth/reset-password" passHref>
-                <MuiLink variant="body2">
-                  Forgot Password?
-                </MuiLink>
+                <MuiLink variant="body2">Forgot Password?</MuiLink>
               </Link>
             </Box>
 
@@ -226,11 +230,11 @@ export default function Login() {
               variant="contained"
               size="large"
               disabled={isLoading}
-              sx={{ 
+              sx={{
                 mt: 2,
                 mb: 3,
                 py: 1.5,
-                position: "relative"
+                position: "relative",
               }}
             >
               {isLoading ? (
@@ -261,4 +265,4 @@ export default function Login() {
       </Container>
     </AuthRoute>
   );
-} 
+}

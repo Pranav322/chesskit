@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { useRouter } from "next/router";
-import { FirebaseError } from 'firebase/app';
+import { FirebaseError } from "firebase/app";
 import {
   Box,
   Button,
@@ -70,7 +70,9 @@ export default function SignUp() {
             setError("Invalid email format");
             break;
           case "auth/operation-not-allowed":
-            setError("Email/password accounts are not enabled. Please contact support");
+            setError(
+              "Email/password accounts are not enabled. Please contact support"
+            );
             break;
           case "auth/weak-password":
             setError("Password is too weak. Please use a stronger password");
@@ -101,10 +103,14 @@ export default function SignUp() {
             setError("Sign up cancelled. Please try again");
             break;
           case "auth/popup-blocked":
-            setError("Pop-up blocked by browser. Please allow pop-ups for this site");
+            setError(
+              "Pop-up blocked by browser. Please allow pop-ups for this site"
+            );
             break;
           case "auth/account-exists-with-different-credential":
-            setError("An account already exists with the same email but different sign-in method");
+            setError(
+              "An account already exists with the same email but different sign-in method"
+            );
             break;
           default:
             setError("Failed to sign up with Google. Please try again");
@@ -135,9 +141,9 @@ export default function SignUp() {
             boxShadow: 3,
           }}
         >
-          <Typography 
-            component="h1" 
-            variant="h4" 
+          <Typography
+            component="h1"
+            variant="h4"
             sx={{ mb: 3, fontWeight: 600 }}
           >
             Create Account
@@ -236,7 +242,9 @@ export default function SignUp() {
                   <InputAdornment position="end">
                     <IconButton
                       aria-label="toggle confirm password visibility"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                       edge="end"
                     >
                       <Icon
@@ -255,11 +263,11 @@ export default function SignUp() {
               variant="contained"
               size="large"
               disabled={isLoading}
-              sx={{ 
+              sx={{
                 mt: 3,
                 mb: 3,
                 py: 1.5,
-                position: "relative"
+                position: "relative",
               }}
             >
               {isLoading ? (
@@ -290,4 +298,4 @@ export default function SignUp() {
       </Container>
     </AuthRoute>
   );
-} 
+}

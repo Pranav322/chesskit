@@ -21,4 +21,4 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   return user ? <>{children}</> : null;
-} 
+}

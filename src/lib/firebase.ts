@@ -1,6 +1,11 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getAnalytics, isSupported, logEvent } from "firebase/analytics";
+import {
+  getAnalytics,
+  isSupported,
+  logEvent,
+  Analytics,
+} from "firebase/analytics";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -13,10 +18,11 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const app =
+  getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 const auth = getAuth(app);
 
-let analytics: any;
+let analytics: Analytics | null = null;
 
 isSupported().then((supported) => {
   if (supported && typeof window !== "undefined") {
@@ -26,7 +32,7 @@ isSupported().then((supported) => {
 
 export const logAnalyticsEvent = (
   eventName: string,
-  eventParams?: { [key: string]: any }
+  eventParams?: Record<string, unknown>
 ) => {
   if (!analytics) return;
   logEvent(analytics, eventName, eventParams);

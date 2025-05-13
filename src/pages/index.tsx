@@ -153,7 +153,9 @@ export default function GameReview() {
               <Tab
                 label="Graph"
                 id="tab2"
-                icon={<Icon icon="mdi:chart-line" color="#27f019" height={15} />}
+                icon={
+                  <Icon icon="mdi:chart-line" color="#27f019" height={15} />
+                }
                 iconPosition="start"
                 sx={{
                   textTransform: "none",

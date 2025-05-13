@@ -36,20 +36,20 @@ export default function Layout({ children }: PropsWithChildren) {
           MuiAppBar: {
             styleOverrides: {
               root: {
-                backgroundColor: 'transparent',
-                boxShadow: 'none',
-                '& .MuiToolbar-root': {
-                  color: '#EC6700',
+                backgroundColor: "transparent",
+                boxShadow: "none",
+                "& .MuiToolbar-root": {
+                  color: "#EC6700",
                 },
-                '& .MuiTypography-root': {
-                  color: '#EC6700',
+                "& .MuiTypography-root": {
+                  color: "#EC6700",
                   fontFamily: '"Roboto Slab", serif',
                   fontWeight: 500,
                 },
-                '& .MuiIconButton-root': {
-                  color: '#EC6700',
-                  '&:hover': {
-                    backgroundColor: 'rgba(236, 103, 0, 0.1)',
+                "& .MuiIconButton-root": {
+                  color: "#EC6700",
+                  "&:hover": {
+                    backgroundColor: "rgba(236, 103, 0, 0.1)",
                   },
                 },
               },
@@ -79,9 +79,9 @@ export default function Layout({ children }: PropsWithChildren) {
           MuiTypography: {
             styleOverrides: {
               root: {
-                color: useDarkMode ? '#ffffff' : '#1D1922',
-                '&.move-text': {
-                  color: useDarkMode ? '#ffffff' : '#1D1922',
+                color: useDarkMode ? "#ffffff" : "#1D1922",
+                "&.move-text": {
+                  color: useDarkMode ? "#ffffff" : "#1D1922",
                 },
               },
             },
@@ -89,9 +89,11 @@ export default function Layout({ children }: PropsWithChildren) {
           MuiListItem: {
             styleOverrides: {
               root: {
-                color: useDarkMode ? '#ffffff' : '#1D1922',
-                '&:hover': {
-                  backgroundColor: useDarkMode ? 'rgba(239, 167, 101, 0.1)' : 'rgba(236, 103, 0, 0.1)',
+                color: useDarkMode ? "#ffffff" : "#1D1922",
+                "&:hover": {
+                  backgroundColor: useDarkMode
+                    ? "rgba(239, 167, 101, 0.1)"
+                    : "rgba(236, 103, 0, 0.1)",
                 },
               },
             },

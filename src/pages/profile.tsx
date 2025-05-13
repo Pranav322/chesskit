@@ -66,7 +66,11 @@ export default function Profile() {
             </Typography>
 
             <Box component="form" onSubmit={handleUpdateProfile} sx={{ mt: 3 }}>
-              <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+              <Typography
+                variant="subtitle1"
+                color="text.secondary"
+                gutterBottom
+              >
                 Display Name
               </Typography>
               {isEditing ? (
@@ -84,11 +88,7 @@ export default function Profile() {
 
               {isEditing ? (
                 <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-                  <Button
-                    variant="contained"
-                    type="submit"
-                    sx={{ flex: 1 }}
-                  >
+                  <Button variant="contained" type="submit" sx={{ flex: 1 }}>
                     Save
                   </Button>
                   <Button
@@ -117,4 +117,4 @@ export default function Profile() {
       </Container>
     </ProtectedRoute>
   );
-} 
+}

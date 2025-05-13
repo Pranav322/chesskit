@@ -21,4 +21,4 @@ export default function AuthRoute({ children }: AuthRouteProps) {
   }
 
   return !user ? <>{children}</> : null;
-} 
+}

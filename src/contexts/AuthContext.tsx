@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { FirebaseError } from 'firebase/app';
+import { FirebaseError } from "firebase/app";
 import {
   User,
   signInWithEmailAndPassword,
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error instanceof FirebaseError) {
         throw error;
       }
-      throw new Error('An unexpected error occurred during sign in');
+      throw new Error("An unexpected error occurred during sign in");
     }
   };
 
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error instanceof FirebaseError) {
         throw error;
       }
-      throw new Error('An unexpected error occurred during sign up');
+      throw new Error("An unexpected error occurred during sign up");
     }
   };
 
@@ -81,9 +81,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const provider = new GoogleAuthProvider();
     provider.addScope("https://www.googleapis.com/auth/userinfo.profile");
     provider.addScope("https://www.googleapis.com/auth/userinfo.email");
-    
+
     provider.setCustomParameters({
-      prompt: "select_account"
+      prompt: "select_account",
     });
 
     try {
@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error instanceof FirebaseError) {
         throw error;
       }
-      throw new Error('An unexpected error occurred during Google sign in');
+      throw new Error("An unexpected error occurred during Google sign in");
     }
   };
 
@@ -103,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error instanceof FirebaseError) {
         throw error;
       }
-      throw new Error('An unexpected error occurred during logout');
+      throw new Error("An unexpected error occurred during logout");
     }
   };
 
@@ -129,4 +129,4 @@ export function useAuth() {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-} 
+}
