@@ -14,6 +14,8 @@ export interface Game {
   termination?: string;
   timeControl?: string;
   isFavorite?: boolean;
+  notes?: string;
+  tags?: string[];
   metadata?: {
     white: Player;
     black: Player;

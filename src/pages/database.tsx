@@ -1,4 +1,4 @@
-import { Grid2 as Grid, Typography, Box, IconButton, Tooltip } from "@mui/material";
+import { Grid2 as Grid, Typography, Box, IconButton, Tooltip, Chip } from "@mui/material";
 import { Icon } from "@iconify/react";
 import {
   DataGrid,
@@ -20,6 +20,8 @@ import DatabaseFilters, {
   colorFilterAtom,
   openingFilterAtom,
   showFavoritesOnlyAtom,
+  eloRangeFilterAtom,
+  customTagFilterAtom,
 } from "@/sections/database/databaseFilters";
 import { useAtomValue, useAtom } from "jotai";
 import { Color } from "@/types/enums";
@@ -28,6 +30,7 @@ import StarBorderIcon from "@mui/icons-material/StarBorder";
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import NotesDialog from "@/sections/database/notesDialog";
 import { Game } from "@/types/game";
+import TagsDialog from "@/sections/database/tagsDialog";
 
 const gridLocaleText: GridLocaleText = {
   ...GRID_DEFAULT_LOCALE_TEXT,
@@ -40,12 +43,15 @@ export default function GameDatabase() {
   const [showFavoritesOnly] = useAtom(showFavoritesOnlyAtom);
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [isNotesDialogOpen, setIsNotesDialogOpen] = useState(false);
+  const [isTagsDialogOpen, setIsTagsDialogOpen] = useState(false);
 
   // Get filter values
   const platformFilter = useAtomValue(platformFilterAtom);
   const resultFilter = useAtomValue(resultFilterAtom);
   const colorFilter = useAtomValue(colorFilterAtom);
   const openingFilter = useAtomValue(openingFilterAtom);
+  const eloRangeFilter = useAtomValue(eloRangeFilterAtom);
+  const customTagFilter = useAtomValue(customTagFilterAtom);
 
   // Filter games based on selected filters
   const filteredGames = useMemo(() => {
@@ -56,7 +62,7 @@ export default function GameDatabase() {
       }
 
       // Platform filter
-      if (platformFilter !== "all" && game.source !== platformFilter) {
+      if (platformFilter !== "all" && game.metadata?.platform !== platformFilter) {
         return false;
       }
 
@@ -84,9 +90,29 @@ export default function GameDatabase() {
         return false;
       }
 
+      // ELO Range filter
+      const whiteElo = game.white.rating || 0;
+      const blackElo = game.black.rating || 0;
+      const username = localStorage.getItem("username") || "";
+      const playerElo = game.white.name === username ? whiteElo : blackElo;
+      
+      if (playerElo < eloRangeFilter[0] || playerElo > eloRangeFilter[1]) {
+        return false;
+      }
+
+      // Custom Tags filter
+      if (customTagFilter && customTagFilter.trim() !== "") {
+        const searchTerm = customTagFilter.toLowerCase().trim();
+        if (!game.tags || !game.tags.some(tag => 
+          tag.toLowerCase().includes(searchTerm)
+        )) {
+          return false;
+        }
+      }
+
       return true;
     });
-  }, [games, platformFilter, resultFilter, colorFilter, openingFilter, showFavoritesOnly]);
+  }, [games, platformFilter, resultFilter, colorFilter, openingFilter, showFavoritesOnly, eloRangeFilter, customTagFilter]);
 
   const handleDeleteGameRow = useCallback(
     (id: GridRowId) => async () => {
@@ -123,6 +149,13 @@ export default function GameDatabase() {
       });
     }
   };
+
+  const handleUpdateTags = useCallback(
+    async (game: Game, newTags: string[]) => {
+      await updateGame(game.id, { ...game, tags: newTags });
+    },
+    [updateGame]
+  );
 
   const columns: GridColDef[] = useMemo(
     () => [
@@ -283,6 +316,79 @@ export default function GameDatabase() {
           ];
         },
       },
+      {
+        field: "tags",
+        headerName: "Tags",
+        width: 300,
+        renderCell: (params: any) => {
+          const game = params.row as Game;
+          return (
+            <Box 
+              sx={{ 
+                display: "flex", 
+                gap: 0.5, 
+                flexWrap: "wrap",
+                width: "100%",
+                alignItems: "center",
+                justifyContent: "center",
+                py: 0.5,
+                "&:hover": {
+                  cursor: "pointer",
+                  "& .add-tag": {
+                    opacity: 1,
+                  },
+                  backgroundColor: "action.hover",
+                  borderRadius: 1,
+                },
+              }}
+              onClick={() => {
+                setSelectedGame(game);
+                setIsTagsDialogOpen(true);
+              }}
+            >
+              {game.tags?.map((tag, index) => (
+                <Chip
+                  key={index}
+                  label={tag}
+                  size="small"
+                  color="primary"
+                  sx={{
+                    maxWidth: 120,
+                    fontSize: "0.75rem",
+                    color: "white",
+                    backgroundColor: "primary.main",
+                    "& .MuiChip-label": {
+                      color: "white",
+                    },
+                    "&:hover": {
+                      backgroundColor: "primary.dark",
+                    },
+                  }}
+                />
+              ))}
+              <Chip
+                icon={<Icon icon="mdi:tag-plus" />}
+                label="Add Tag"
+                size="small"
+                className="add-tag"
+                sx={{
+                  opacity: game.tags?.length ? 0 : 1,
+                  transition: "opacity 0.2s",
+                  backgroundColor: "primary.main",
+                  color: "white",
+                  "& .MuiChip-icon": {
+                    color: "white",
+                  },
+                  "&:hover": {
+                    backgroundColor: "primary.dark",
+                    opacity: 1,
+                  },
+                }}
+              />
+            </Box>
+          );
+        },
+      },
     ],
     [handleDeleteGameRow, handleCopyGameRow, handleToggleFavorite, router]
   );
@@ -328,12 +434,20 @@ export default function GameDatabase() {
       </Grid>
 
       {selectedGame && (
-        <NotesDialog
-          open={isNotesDialogOpen}
-          onClose={() => setIsNotesDialogOpen(false)}
-          game={selectedGame}
-          onSave={handleSaveNotes}
-        />
+        <>
+          <NotesDialog
+            open={isNotesDialogOpen}
+            onClose={() => setIsNotesDialogOpen(false)}
+            game={selectedGame}
+            onSave={handleSaveNotes}
+          />
+          <TagsDialog
+            open={isTagsDialogOpen}
+            onClose={() => setIsTagsDialogOpen(false)}
+            game={selectedGame}
+            onSave={(tags) => handleUpdateTags(selectedGame, tags)}
+          />
+        </>
       )}
     </Box>
   );
