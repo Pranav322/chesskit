@@ -1,104 +1,223 @@
-import React from 'react';
-import { ImportProgress as ImportProgressType } from '@/types/importedGame';
-import { Icon } from '@iconify/react';
+import React from "react";
+import { ImportProgress as ImportProgressType } from "@/types/importedGame";
+import { Icon } from "@iconify/react";
+import {
+  Box,
+  Typography,
+  LinearProgress,
+  Grid,
+  Paper,
+  Avatar,
+  Alert,
+  AlertTitle,
+} from "@mui/material";
+import { DuplicateGameDialog } from "./DuplicateGameDialog";
 
 export const ImportProgress: React.FC<{
   progress: ImportProgressType;
-}> = ({ progress }) => {
-  const percentage = progress.total > 0 
+  onDuplicateAction?: (action: "skip" | "overwrite", applyToAll: boolean) => void;
+}> = ({ progress, onDuplicateAction }) => {
+  const percentage = progress.total > 0
     ? Math.round((progress.completed / progress.total) * 100)
     : 0;
 
   const getStatusColor = () => {
     switch (progress.status) {
-      case 'importing':
-        return 'bg-orange-500';
-      case 'completed':
-        return 'bg-green-500';
-      case 'failed':
-        return 'bg-red-500';
+      case "importing":
+        return "warning.main";
+      case "completed":
+        return "success.main";
+      case "failed":
+        return "error.main";
       default:
-        return 'bg-gray-600';
+        return "grey.600";
     }
   };
 
   const getStatusIcon = () => {
     switch (progress.status) {
-      case 'importing':
-        return <Icon icon="mdi:loading" className="animate-spin text-2xl text-orange-400" />;
-      case 'completed':
-        return <Icon icon="mdi:check-circle" className="text-2xl text-green-400" />;
-      case 'failed':
-        return <Icon icon="mdi:alert-circle" className="text-2xl text-red-400" />;
+      case "importing":
+        return (
+          <Icon
+            icon="mdi:loading"
+            style={{ 
+              fontSize: "2rem",
+              color: "warning.main",
+              animation: "spin 1s linear infinite",
+            }}
+          />
+        );
+      case "completed":
+        return (
+          <Icon
+            icon="mdi:check-circle"
+            style={{ fontSize: "2rem", color: "success.main" }}
+          />
+        );
+      case "failed":
+        return (
+          <Icon
+            icon="mdi:alert-circle"
+            style={{ fontSize: "2rem", color: "error.main" }}
+          />
+        );
       default:
         return null;
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between bg-gray-800 rounded-xl p-4 shadow-md border border-gray-700">
-        <div className="flex items-center space-x-3">
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+      <Paper
+        elevation={3}
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          p: 2,
+          bgcolor: "background.paper",
+          borderRadius: 2,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           {getStatusIcon()}
-          <span className="text-lg font-medium text-gray-200">
-            {progress.status === 'importing' && 'Importing games...'}
-            {progress.status === 'completed' && 'Import completed'}
-            {progress.status === 'failed' && 'Import failed'}
-          </span>
-        </div>
-        <span className="text-lg font-semibold text-orange-400">
+          <Typography variant="h6" color="text.primary">
+            {progress.status === "importing" && "Importing games..."}
+            {progress.status === "completed" && "Import completed"}
+            {progress.status === "failed" && "Import failed"}
+          </Typography>
+        </Box>
+        <Typography variant="h6" color={getStatusColor()}>
           {percentage}%
-        </span>
-      </div>
+        </Typography>
+      </Paper>
       
-      <div className="relative">
-        <div className="overflow-hidden h-3 text-xs flex rounded-full bg-gray-700">
-          <div
-            className={`${getStatusColor()} transition-all duration-500 ease-out shadow-sm`}
-            style={{ width: `${percentage}%` }}
-          />
-        </div>
-      </div>
+      <Box sx={{ width: "100%" }}>
+        <LinearProgress
+          variant="determinate"
+          value={percentage}
+          color={progress.status === "completed" ? "success" : "primary"}
+        />
+      </Box>
 
-      <div className="grid grid-cols-3 gap-6">
-        <div className="bg-gray-800 rounded-xl p-4 shadow-md border border-gray-700">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-base font-medium text-gray-400">Total</div>
-            <Icon icon="mdi:database" className="text-xl text-gray-500" />
-          </div>
-          <div className="text-2xl font-bold text-gray-200">{progress.total}</div>
-        </div>
-        <div className="bg-gray-800 rounded-xl p-4 shadow-md border border-green-900/30">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-base font-medium text-green-400">Imported</div>
-            <Icon icon="mdi:check-circle" className="text-xl text-green-500" />
-          </div>
-          <div className="text-2xl font-bold text-green-400">{progress.completed}</div>
-        </div>
-        <div className="bg-gray-800 rounded-xl p-4 shadow-md border border-red-900/30">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-base font-medium text-red-400">Failed</div>
-            <Icon icon="mdi:alert-circle" className="text-xl text-red-500" />
-          </div>
-          <div className="text-2xl font-bold text-red-400">{progress.failed}</div>
-        </div>
-      </div>
+      <Grid container spacing={3}>
+        <Grid item xs={4}>
+          <Paper
+            elevation={3}
+            sx={{
+              p: 2,
+              bgcolor: "background.paper",
+              borderRadius: 2,
+            }}
+          >
+            <Box 
+              sx={{ 
+                display: "flex",
+                justifyContent: "space-between",
+                mb: 1,
+              }}
+            >
+              <Typography variant="body1" color="text.secondary">
+                Total
+              </Typography>
+              <Icon 
+                icon="mdi:database"
+                style={{ fontSize: "1.5rem", color: "text.secondary" }}
+              />
+            </Box>
+            <Typography variant="h4" color="text.primary">
+              {progress.total}
+            </Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={4}>
+          <Paper
+            elevation={3}
+            sx={{
+              p: 2,
+              bgcolor: "background.paper",
+              borderRadius: 2,
+              borderColor: "success.light",
+              borderWidth: 1,
+              borderStyle: "solid",
+            }}
+          >
+            <Box 
+              sx={{ 
+                display: "flex",
+                justifyContent: "space-between",
+                mb: 1,
+              }}
+            >
+              <Typography variant="body1" color="success.main">
+                Imported
+              </Typography>
+              <Icon 
+                icon="mdi:check-circle"
+                style={{ fontSize: "1.5rem", color: "success.main" }}
+              />
+            </Box>
+            <Typography variant="h4" color="success.main">
+              {progress.completed}
+            </Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={4}>
+          <Paper
+            elevation={3}
+            sx={{
+              p: 2,
+              bgcolor: "background.paper",
+              borderRadius: 2,
+              borderColor: "warning.light",
+              borderWidth: 1,
+              borderStyle: "solid",
+            }}
+          >
+            <Box 
+              sx={{ 
+                display: "flex",
+                justifyContent: "space-between",
+                mb: 1,
+              }}
+            >
+              <Typography variant="body1" color="warning.main">
+                Duplicates
+              </Typography>
+              <Icon 
+                icon="mdi:content-copy"
+                style={{ fontSize: "1.5rem", color: "warning.main" }}
+              />
+            </Box>
+            <Typography variant="h4" color="warning.main">
+              {progress.duplicates || 0}
+            </Typography>
+          </Paper>
+        </Grid>
+      </Grid>
 
-      {progress.status === 'failed' && progress.error && (
-        <div className="bg-gray-800 rounded-xl p-6 shadow-md border-2 border-red-900/30">
-          <div className="flex items-center space-x-3">
-            <div className="flex-shrink-0">
-              <Icon icon="mdi:alert-circle" className="text-2xl text-red-400" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-base font-medium text-red-400 mb-1">Import Failed</h3>
-              <p className="text-sm text-red-300">
-                {progress.error}
-              </p>
-            </div>
-          </div>
-        </div>
+      {progress.currentDuplicate && (
+        <DuplicateGameDialog
+          open={Boolean(progress.currentDuplicate)}
+          gameId={progress.currentDuplicate.gameId}
+          onClose={() => onDuplicateAction?.("skip", false)}
+          onAction={onDuplicateAction}
+        />
       )}
-    </div>
+
+      {progress.status === "failed" && progress.error && (
+        <Alert
+          severity="error"
+          icon={
+            <Avatar sx={{ bgcolor: "error.main" }}>
+              <Icon icon="mdi:alert-circle" />
+            </Avatar>
+          }
+        >
+          <AlertTitle>Import Failed</AlertTitle>
+          {progress.error}
+        </Alert>
+      )}
+    </Box>
   );
 }; 

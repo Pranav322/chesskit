@@ -11,6 +11,7 @@ const initialProgress: ImportProgressType = {
   total: 0,
   completed: 0,
   failed: 0,
+  duplicates: 0,
   status: 'idle',
 };
 
@@ -19,6 +20,10 @@ export const GameImportContainer: React.FC = () => {
   const [progress, setProgress] = useState<ImportProgressType>(initialProgress);
   const [username, setUsername] = useState('');
   const importService = new GameImportService();
+
+  const handleDuplicateAction = (action: "skip" | "overwrite", applyToAll: boolean) => {
+    return [action, applyToAll] as const;
+  };
 
   const handleImport = async (options: GameImportOptions) => {
     if (!user || !username) {
@@ -34,7 +39,41 @@ export const GameImportContainer: React.FC = () => {
       await importService.importGames(
         user.uid,
         username,
-        options,
+        {
+          ...options,
+          onDuplicateFound: async (result) => {
+            // Wait for user action through the UI
+            return new Promise((resolve) => {
+              setProgress(prev => ({
+                ...prev,
+                currentDuplicate: {
+                  gameId: result.gameData.originalId,
+                  existingGame: result.duplicateCheck.existingGame,
+                },
+              }));
+
+              // The ImportProgress component will call handleDuplicateAction
+              // which will resolve this promise through the onDuplicateAction prop
+              const cleanup = () => {
+                setProgress(prev => ({
+                  ...prev,
+                  currentDuplicate: undefined,
+                }));
+              };
+
+              const handleAction = (action: "skip" | "overwrite", applyToAll: boolean) => {
+                cleanup();
+                resolve(handleDuplicateAction(action, applyToAll));
+              };
+
+              // Update progress with the action handler
+              setProgress(prev => ({
+                ...prev,
+                onDuplicateAction: handleAction,
+              }));
+            });
+          },
+        },
         (newProgress) => {
           if (typeof newProgress === 'function') {
             setProgress(prev => newProgress(prev));
@@ -108,7 +147,10 @@ export const GameImportContainer: React.FC = () => {
             </Box>
             {progress.status !== 'idle' && (
               <Box sx={{ mt: 2 }}>
-                <ImportProgress progress={progress} />
+                <ImportProgress 
+                  progress={progress} 
+                  onDuplicateAction={progress.onDuplicateAction}
+                />
               </Box>
             )}
             {progress.status === 'idle' && (

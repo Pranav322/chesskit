@@ -28,4 +28,10 @@ export interface ImportProgress {
   failed: number;
   status: 'idle' | 'importing' | 'completed' | 'failed';
   error?: string;
+  duplicates?: number;
+  currentDuplicate?: {
+    gameId: string;
+    existingGame?: ImportedGame;
+  };
+  onDuplicateAction?: (action: "skip" | "overwrite", applyToAll: boolean) => void;
 } 

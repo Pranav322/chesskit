@@ -12,6 +12,8 @@ import {
   updateDoc,
   DocumentReference,
   FirestoreError,
+  deleteDoc,
+  runTransaction,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { ImportedGameData, ImportHistoryData, ImportProgressData } from '@/types/database';
@@ -137,12 +139,63 @@ export class FirestoreService {
 
   // Games Methods
   async saveGame(game: Omit<ImportedGameData, 'id'>): Promise<string> {
+    // First check if a game with this originalId already exists
+    const existingGame = await this.findGameByOriginalId(
+      game.userId,
+      game.source,
+      game.originalId
+    );
+
+    if (existingGame) {
+      throw new Error(`Game with originalId ${game.originalId} already exists`);
+    }
+
+    // If no existing game, proceed with save
     const gameRef = doc(this.gamesCollection);
     await setDoc(gameRef, {
       ...game,
       importedAt: Timestamp.now(),
     });
     return gameRef.id;
+  }
+
+  async saveOrUpdateGame(game: Omit<ImportedGameData, 'id'>, overwrite = false): Promise<string> {
+    try {
+      return await runTransaction(db, async (transaction) => {
+        // Check for existing game with the same originalId
+        const q = query(
+          this.gamesCollection,
+          where('userId', '==', game.userId),
+          where('source', '==', game.source),
+          where('originalId', '==', game.originalId),
+          limit(1)
+        );
+
+        const snapshot = await getDocs(q);
+        const existingGame = snapshot.docs[0];
+
+        if (existingGame) {
+          if (!overwrite) {
+            throw new Error(`Game with originalId ${game.originalId} already exists`);
+          }
+          // If overwrite is true, delete the existing game
+          const existingRef = doc(this.gamesCollection, existingGame.id);
+          transaction.delete(existingRef);
+        }
+
+        // Create new game
+        const newGameRef = doc(this.gamesCollection);
+        transaction.set(newGameRef, {
+          ...game,
+          importedAt: Timestamp.now(),
+        });
+
+        return newGameRef.id;
+      });
+    } catch (error) {
+      console.error('Error in saveOrUpdateGame:', error);
+      throw error;
+    }
   }
 
   async getGame(gameId: string): Promise<ImportedGameData | null> {
@@ -193,6 +246,47 @@ export class FirestoreService {
     return snapshot.docs.map(
       (doc) => ({ id: doc.id, ...doc.data() } as ImportedGameData)
     );
+  }
+
+  async findGameByOriginalId(
+    userId: string,
+    platform: GameOrigin,
+    originalId: string
+  ): Promise<ImportedGameData | null> {
+    try {
+      const gamesRef = collection(db, 'games');
+      const q = query(
+        gamesRef,
+        where('userId', '==', userId),
+        where('source', '==', platform),
+        where('originalId', '==', originalId),
+        limit(1)
+      );
+
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) {
+        return null;
+      }
+
+      const doc = snapshot.docs[0];
+      return {
+        id: doc.id,
+        ...doc.data()
+      } as ImportedGameData;
+    } catch (error) {
+      console.error('Error finding game by originalId:', error);
+      return null;
+    }
+  }
+
+  async deleteGame(gameId: string): Promise<void> {
+    try {
+      const gameRef = doc(db, 'games', gameId);
+      await deleteDoc(gameRef);
+    } catch (error) {
+      console.error('Error deleting game:', error);
+      throw error;
+    }
   }
 
   // Error handling wrapper

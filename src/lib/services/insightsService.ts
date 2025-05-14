@@ -2,6 +2,7 @@ import { Chess } from 'chess.js';
 import { ImportedGameData } from '@/types/database';
 import { ColorStats, GameInsights, OpeningStats, TimeControlStats, AccuracyStats, PositionAnalysis, WeaknessAnalysis } from '@/types/insights';
 import { openings } from '@/data/openings';
+import { sampleOpenings } from '@/data/sampleInsights';
 import { getPositionWinPercentage } from '@/lib/engine/helpers/winPercentage';
 
 const MISTAKE_THRESHOLD = 0.3; // 30 centipawn loss
@@ -445,6 +446,49 @@ export const generateGameInsights = (
   userId: string,
   games: ImportedGameData[]
 ): GameInsights => {
+  // If no games, return sample data
+  if (games.length === 0) {
+    return {
+      userId,
+      generatedAt: new Date(),
+      totalGames: 0,
+      winLossRatio: {
+        white: { wins: 0, losses: 0, draws: 0, winRate: 0 },
+        black: { wins: 0, losses: 0, draws: 0, winRate: 0 }
+      },
+      timeControls: {
+        bullet: 0,
+        blitz: 0,
+        rapid: 0,
+        classical: 0
+      },
+      averageGameLength: 0,
+      openings: {
+        asWhite: [],
+        asBlack: [],
+        ...sampleOpenings
+      },
+      accuracy: {
+        overall: 0,
+        asWhite: 0,
+        asBlack: 0,
+        byTimeControl: {
+          bullet: 0,
+          blitz: 0,
+          rapid: 0,
+          classical: 0
+        },
+        byPhase: {
+          opening: 0,
+          middlegame: 0,
+          endgame: 0
+        }
+      },
+      criticalPositions: [],
+      weaknesses: []
+    };
+  }
+
   const whiteStats = calculateColorStats(games, 'white');
   const blackStats = calculateColorStats(games, 'black');
   const timeControls = calculateTimeControlStats(games);
@@ -498,9 +542,9 @@ export const generateGameInsights = (
     openings: {
       asWhite: whiteOpenings.sort((a, b) => b.count - a.count).slice(0, 5),
       asBlack: blackOpenings.sort((a, b) => b.count - a.count).slice(0, 5),
-      mostPlayed,
-      bestPerformance,
-      worstPerformance
+      mostPlayed: mostPlayed.length > 0 ? mostPlayed : sampleOpenings.mostPlayed,
+      bestPerformance: bestPerformance.length > 0 ? bestPerformance : sampleOpenings.bestPerformance,
+      worstPerformance: worstPerformance.length > 0 ? worstPerformance : sampleOpenings.worstPerformance
     },
     accuracy,
     criticalPositions,
