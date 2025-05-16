@@ -7,6 +7,7 @@ import {
   TextField,
   Chip,
   Box,
+  Typography,
 } from "@mui/material";
 import { Game } from "@/types/game";
 import { useState } from "react";
@@ -16,9 +17,10 @@ interface Props {
   onClose: () => void;
   game: Game;
   onSave: (tags: string[]) => void;
+  isBulkEdit?: boolean;
 }
 
-export default function TagsDialog({ open, onClose, game, onSave }: Props) {
+export default function TagsDialog({ open, onClose, game, onSave, isBulkEdit }: Props) {
   const [tags, setTags] = useState<string[]>(game.tags || []);
   const [newTag, setNewTag] = useState("");
 
@@ -40,7 +42,14 @@ export default function TagsDialog({ open, onClose, game, onSave }: Props) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Manage Tags</DialogTitle>
+      <DialogTitle>
+        {isBulkEdit ? "Bulk Edit Tags" : "Manage Tags"}
+        {isBulkEdit && (
+          <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 1 }}>
+            These tags will be applied to all selected games
+          </Typography>
+        )}
+      </DialogTitle>
       <DialogContent>
         <Box sx={{ mb: 2 }}>
           <TextField
@@ -71,7 +80,7 @@ export default function TagsDialog({ open, onClose, game, onSave }: Props) {
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
         <Button onClick={handleSave} variant="contained" color="primary">
-          Save
+          {isBulkEdit ? "Apply to All Selected" : "Save"}
         </Button>
       </DialogActions>
     </Dialog>

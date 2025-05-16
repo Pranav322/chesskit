@@ -2,7 +2,6 @@ import { Chess } from 'chess.js';
 import { ImportedGameData } from '@/types/database';
 import { ColorStats, GameInsights, OpeningStats, TimeControlStats, AccuracyStats, PositionAnalysis, WeaknessAnalysis } from '@/types/insights';
 import { openings } from '@/data/openings';
-import { sampleOpenings } from '@/data/sampleInsights';
 import { getPositionWinPercentage } from '@/lib/engine/helpers/winPercentage';
 
 const MISTAKE_THRESHOLD = 0.3; // 30 centipawn loss
@@ -91,24 +90,67 @@ const identifyOpening = (pgn: string): { name: string; eco?: string } => {
     chess.loadPgn(pgn);
     const moves = chess.history();
     let lastMatchedOpening = { name: "Unknown Opening" };
+    let bestMatchLength = 0;
 
     // Try to match the position after each move against known openings
-    for (let i = 1; i <= Math.min(moves.length, 10); i++) {
+    for (let i = 1; i <= Math.min(moves.length, 15); i++) { 
+      // Increased to 15 moves
       const tempChess = new Chess();
-      moves.slice(0, i).forEach(move => tempChess.move(move));
+      const movesSlice = moves.slice(0, i);
+      movesSlice.forEach(move => tempChess.move(move));
       const currentFen = tempChess.fen().split(' ')[0]; // Only compare piece positions
 
-      // Try to find a matching opening by comparing piece positions
-      const matchedOpening = openings.find(op => {
+      // Try to find matching openings by comparing piece positions
+      const matchedOpenings = openings.filter(op => {
         const openingFen = op.fen.split(' ')[0];
         // Compare piece positions only, ignoring castling rights and en passant
         return currentFen === openingFen;
       });
 
-      if (matchedOpening) {
-        lastMatchedOpening = matchedOpening;
-        console.log(`Found opening match at move ${i}: ${matchedOpening.name}`);
+      // If we found matches, use the one that matches the most moves
+      if (matchedOpenings.length > 0 && i > bestMatchLength) {
+        // Prefer more specific (longer) opening names
+        const bestMatch = matchedOpenings.reduce((best, current) => {
+          return (current.name.length > best.name.length) ? current : best;
+        });
+        lastMatchedOpening = bestMatch;
+        bestMatchLength = i;
       }
+
+      // Also try to identify common opening patterns if no exact match
+      if (i <= 4 && !matchedOpenings.length) {
+        const moveStr = movesSlice.join(' ');
+        // Common opening patterns
+        if (moveStr.startsWith('e4 e5')) {
+          if (moveStr.includes('Nf3')) lastMatchedOpening = { name: "King's Pawn Game" };
+          if (moveStr.includes('Bc4')) lastMatchedOpening = { name: "Italian Game" };
+        } else if (moveStr.startsWith('e4 c5')) {
+          lastMatchedOpening = { name: "Sicilian Defense" };
+        } else if (moveStr.startsWith('e4 e6')) {
+          lastMatchedOpening = { name: "French Defense" };
+        } else if (moveStr.startsWith('e4 c6')) {
+          lastMatchedOpening = { name: "Caro-Kann Defense" };
+        } else if (moveStr.startsWith('d4 d5')) {
+          if (moveStr.includes('c4')) lastMatchedOpening = { name: "Queen's Gambit" };
+          else lastMatchedOpening = { name: "Queen's Pawn Game" };
+        } else if (moveStr.startsWith('d4 Nf6')) {
+          lastMatchedOpening = { name: "Indian Defense" };
+        } else if (moveStr.startsWith('c4')) {
+          lastMatchedOpening = { name: "English Opening" };
+        } else if (moveStr.startsWith('Nf3')) {
+          lastMatchedOpening = { name: "Réti Opening" };
+        }
+      }
+    }
+
+    // If we still don't have a match but have moves, at least categorize by first move
+    if (lastMatchedOpening.name === "Unknown Opening" && moves.length > 0) {
+      const firstMove = moves[0];
+      if (firstMove.startsWith('e')) lastMatchedOpening = { name: "King's Pawn Opening" };
+      else if (firstMove.startsWith('d')) lastMatchedOpening = { name: "Queen's Pawn Opening" };
+      else if (firstMove.startsWith('c')) lastMatchedOpening = { name: "English Opening" };
+      else if (firstMove.startsWith('Nf3')) lastMatchedOpening = { name: "Réti Opening" };
+      else if (firstMove.startsWith('f')) lastMatchedOpening = { name: "Bird's Opening" };
     }
 
     return lastMatchedOpening;
@@ -446,7 +488,7 @@ export const generateGameInsights = (
   userId: string,
   games: ImportedGameData[]
 ): GameInsights => {
-  // If no games, return sample data
+  // If no games, return empty data structure
   if (games.length === 0) {
     return {
       userId,
@@ -466,7 +508,9 @@ export const generateGameInsights = (
       openings: {
         asWhite: [],
         asBlack: [],
-        ...sampleOpenings
+        mostPlayed: [],
+        bestPerformance: [],
+        worstPerformance: []
       },
       accuracy: {
         overall: 0,
@@ -542,9 +586,9 @@ export const generateGameInsights = (
     openings: {
       asWhite: whiteOpenings.sort((a, b) => b.count - a.count).slice(0, 5),
       asBlack: blackOpenings.sort((a, b) => b.count - a.count).slice(0, 5),
-      mostPlayed: mostPlayed.length > 0 ? mostPlayed : sampleOpenings.mostPlayed,
-      bestPerformance: bestPerformance.length > 0 ? bestPerformance : sampleOpenings.bestPerformance,
-      worstPerformance: worstPerformance.length > 0 ? worstPerformance : sampleOpenings.worstPerformance
+      mostPlayed,
+      bestPerformance,
+      worstPerformance
     },
     accuracy,
     criticalPositions,

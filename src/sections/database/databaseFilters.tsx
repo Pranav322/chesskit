@@ -13,6 +13,8 @@ import {
 } from "@mui/material";
 import { GameOrigin, Color } from "@/types/enums";
 import { atom, useAtom } from "jotai";
+import { useGameDatabase } from "@/hooks/useGameDatabase";
+import { Folder } from "@/types/folder";
 
 // Filter atoms
 export const platformFilterAtom = atom<GameOrigin | "all">("all");
@@ -20,8 +22,9 @@ export const resultFilterAtom = atom<string>("all");
 export const colorFilterAtom = atom<Color | "all">("all");
 export const openingFilterAtom = atom<string>("");
 export const showFavoritesOnlyAtom = atom<boolean>(false);
-export const eloRangeFilterAtom = atom<[number, number]>([0, 3000]);
+export const eloRangeFilterAtom = atom<[number, number]>([0, 4000]);
 export const customTagFilterAtom = atom<string>("");
+export const folderFilterAtom = atom<number | "all">("all");
 
 const results = [
   { value: "all", label: "All Results" },
@@ -31,13 +34,17 @@ const results = [
 ];
 
 export default function DatabaseFilters() {
+  const { folders } = useGameDatabase(false);
   const [platformFilter, setPlatformFilter] = useAtom(platformFilterAtom);
   const [resultFilter, setResultFilter] = useAtom(resultFilterAtom);
   const [colorFilter, setColorFilter] = useAtom(colorFilterAtom);
   const [openingFilter, setOpeningFilter] = useAtom(openingFilterAtom);
-  const [showFavoritesOnly, setShowFavoritesOnly] = useAtom(showFavoritesOnlyAtom);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useAtom(
+    showFavoritesOnlyAtom
+  );
   const [eloRange, setEloRange] = useAtom(eloRangeFilterAtom);
   const [customTagFilter, setCustomTagFilter] = useAtom(customTagFilterAtom);
+  const [folderFilter, setFolderFilter] = useAtom(folderFilterAtom);
 
   const handlePlatformChange = (event: SelectChangeEvent) => {
     setPlatformFilter(event.target.value as GameOrigin | "all");
@@ -59,8 +66,14 @@ export default function DatabaseFilters() {
     setEloRange(newValue as [number, number]);
   };
 
-  const handleCustomTagChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCustomTagChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setCustomTagFilter(event.target.value);
+  };
+
+  const handleFolderChange = (event: SelectChangeEvent) => {
+    setFolderFilter(event.target.value === "all" ? "all" : Number(event.target.value));
   };
 
   return (
@@ -78,7 +91,25 @@ export default function DatabaseFilters() {
         />
       </Grid>
 
-      <Grid xs={2.5}>
+      <Grid xs={2}>
+        <FormControl fullWidth size="small">
+          <InputLabel>Folder</InputLabel>
+          <Select
+            value={folderFilter === "all" ? "all" : folderFilter.toString()}
+            label="Folder"
+            onChange={handleFolderChange}
+          >
+            <MenuItem value="all">All Folders</MenuItem>
+            {folders.map((folder) => (
+              <MenuItem key={folder.id} value={folder.id.toString()}>
+                {folder.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+
+      <Grid xs={2}>
         <FormControl fullWidth size="small">
           <InputLabel>Platform</InputLabel>
           <Select
@@ -94,10 +125,14 @@ export default function DatabaseFilters() {
         </FormControl>
       </Grid>
 
-      <Grid xs={2.5}>
+      <Grid xs={2}>
         <FormControl fullWidth size="small">
           <InputLabel>Result</InputLabel>
-          <Select value={resultFilter} label="Result" onChange={handleResultChange}>
+          <Select
+            value={resultFilter}
+            label="Result"
+            onChange={handleResultChange}
+          >
             {results.map((result) => (
               <MenuItem key={result.value} value={result.value}>
                 {result.label}
@@ -107,10 +142,14 @@ export default function DatabaseFilters() {
         </FormControl>
       </Grid>
 
-      <Grid xs={2.5}>
+      <Grid xs={2}>
         <FormControl fullWidth size="small">
           <InputLabel>Color</InputLabel>
-          <Select value={colorFilter} label="Color" onChange={handleColorChange}>
+          <Select
+            value={colorFilter}
+            label="Color"
+            onChange={handleColorChange}
+          >
             <MenuItem value="all">All Colors</MenuItem>
             <MenuItem value={Color.White}>White</MenuItem>
             <MenuItem value={Color.Black}>Black</MenuItem>
@@ -118,7 +157,7 @@ export default function DatabaseFilters() {
         </FormControl>
       </Grid>
 
-      <Grid xs={2.5}>
+      <Grid xs={2}>
         <TextField
           fullWidth
           size="small"
@@ -131,7 +170,7 @@ export default function DatabaseFilters() {
 
       <Grid xs={12} sx={{ px: 4, mt: 2 }}>
         <FormControl fullWidth>
-          <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'medium' }}>
+          <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: "medium" }}>
             ELO Range: {eloRange[0]} - {eloRange[1]}
           </Typography>
           <Slider
@@ -139,34 +178,33 @@ export default function DatabaseFilters() {
             onChange={handleEloRangeChange}
             valueLabelDisplay="auto"
             min={0}
-            max={3000}
+            max={4000}
             step={100}
             sx={{
-              '& .MuiSlider-thumb': {
+              "& .MuiSlider-thumb": {
                 width: 24,
                 height: 24,
               },
-              '& .MuiSlider-track': {
-                height: 8
+              "& .MuiSlider-track": {
+                height: 8,
               },
-              '& .MuiSlider-rail': {
-                height: 8
+              "& .MuiSlider-rail": {
+                height: 8,
               },
-              '& .MuiSlider-valueLabel': {
-                fontSize: '0.875rem',
-                fontWeight: 'medium',
-                padding: '0.5rem',
-                backgroundColor: 'primary.main'
-              }
+              "& .MuiSlider-valueLabel": {
+                fontSize: "0.875rem",
+                fontWeight: "medium",
+                padding: "0.5rem",
+                backgroundColor: "primary.main",
+              },
             }}
             getAriaValueText={(value) => `${value} ELO`}
             marks={[
               { value: 0 },
               { value: 1000 },
-              { value: 1500 },
               { value: 2000 },
-              { value: 2500 },
-              { value: 3000 }
+              { value: 3000 },
+              { value: 4000 },
             ]}
           />
         </FormControl>

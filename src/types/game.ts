@@ -1,4 +1,5 @@
 import { GameEval } from "./eval";
+import { GameOrigin } from "./enums";
 
 export interface Game {
   id: number;
@@ -19,6 +20,7 @@ export interface Game {
   metadata?: {
     white: Player;
     black: Player;
+    platform?: GameOrigin;
   };
 }
 

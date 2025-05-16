@@ -7,8 +7,9 @@ import {
   GRID_DEFAULT_LOCALE_TEXT,
   GridActionsCellItem,
   GridRowId,
+  GridRowSelectionModel,
 } from "@mui/x-data-grid";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { blue, red, yellow } from "@mui/material/colors";
 import LoadGameButton from "@/sections/loadGame/loadGameButton";
 import { useGameDatabase } from "@/hooks/useGameDatabase";
@@ -22,6 +23,7 @@ import DatabaseFilters, {
   showFavoritesOnlyAtom,
   eloRangeFilterAtom,
   customTagFilterAtom,
+  folderFilterAtom,
 } from "@/sections/database/databaseFilters";
 import { useAtomValue, useAtom } from "jotai";
 import { Color } from "@/types/enums";
@@ -31,6 +33,7 @@ import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import NotesDialog from "@/sections/database/notesDialog";
 import { Game } from "@/types/game";
 import TagsDialog from "@/sections/database/tagsDialog";
+import BulkActions from "@/sections/database/bulkActions";
 
 const gridLocaleText: GridLocaleText = {
   ...GRID_DEFAULT_LOCALE_TEXT,
@@ -38,12 +41,14 @@ const gridLocaleText: GridLocaleText = {
 };
 
 export default function GameDatabase() {
-  const { games, deleteGame, updateGame } = useGameDatabase(true);
+  const { games, deleteGame, updateGame, moveGamesToFolder, getFolderGames } = useGameDatabase(true);
   const router = useRouter();
   const [showFavoritesOnly] = useAtom(showFavoritesOnlyAtom);
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [isNotesDialogOpen, setIsNotesDialogOpen] = useState(false);
   const [isTagsDialogOpen, setIsTagsDialogOpen] = useState(false);
+  const [selectedRows, setSelectedRows] = useState<GridRowSelectionModel>([]);
+  const [filteredGames, setFilteredGames] = useState<Game[]>([]);
 
   // Get filter values
   const platformFilter = useAtomValue(platformFilterAtom);
@@ -52,67 +57,82 @@ export default function GameDatabase() {
   const openingFilter = useAtomValue(openingFilterAtom);
   const eloRangeFilter = useAtomValue(eloRangeFilterAtom);
   const customTagFilter = useAtomValue(customTagFilterAtom);
+  const folderFilter = useAtomValue(folderFilterAtom);
 
   // Filter games based on selected filters
-  const filteredGames = useMemo(() => {
-    return games.filter((game) => {
-      // Favorites filter
-      if (showFavoritesOnly && !game.isFavorite) {
-        return false;
-      }
-
-      // Platform filter
-      if (platformFilter !== "all" && game.metadata?.platform !== platformFilter) {
-        return false;
-      }
-
-      // Result filter
-      if (resultFilter !== "all" && game.result !== resultFilter) {
-        return false;
-      }
-
-      // Color filter
-      if (colorFilter !== "all") {
-        const username = localStorage.getItem("username") || "";
-        const playingAsWhite = game.white.name === username;
-        const playingAsBlack = game.black.name === username;
-
-        if (colorFilter === Color.White && !playingAsWhite) {
-          return false;
-        }
-        if (colorFilter === Color.Black && !playingAsBlack) {
-          return false;
-        }
-      }
-
-      // Opening filter
-      if (openingFilter && !game.event?.toLowerCase().includes(openingFilter.toLowerCase())) {
-        return false;
-      }
-
-      // ELO Range filter
-      const whiteElo = game.white.rating || 0;
-      const blackElo = game.black.rating || 0;
-      const username = localStorage.getItem("username") || "";
-      const playerElo = game.white.name === username ? whiteElo : blackElo;
+  useEffect(() => {
+    const filterGames = async () => {
+      let gamesInFolder = games;
       
-      if (playerElo < eloRangeFilter[0] || playerElo > eloRangeFilter[1]) {
-        return false;
+      // Apply folder filter first
+      if (folderFilter !== "all") {
+        const folderGameIds = await getFolderGames(folderFilter);
+        gamesInFolder = games.filter(game => folderGameIds.includes(game.id));
       }
 
-      // Custom Tags filter
-      if (customTagFilter && customTagFilter.trim() !== "") {
-        const searchTerm = customTagFilter.toLowerCase().trim();
-        if (!game.tags || !game.tags.some(tag => 
-          tag.toLowerCase().includes(searchTerm)
-        )) {
+      const filtered = gamesInFolder.filter((game) => {
+        // Favorites filter
+        if (showFavoritesOnly && !game.isFavorite) {
           return false;
         }
-      }
 
-      return true;
-    });
-  }, [games, platformFilter, resultFilter, colorFilter, openingFilter, showFavoritesOnly, eloRangeFilter, customTagFilter]);
+        // Platform filter
+        if (platformFilter !== "all" && game.metadata?.platform !== platformFilter) {
+          return false;
+        }
+
+        // Result filter
+        if (resultFilter !== "all" && game.result !== resultFilter) {
+          return false;
+        }
+
+        // Color filter
+        if (colorFilter !== "all") {
+          const username = localStorage.getItem("username") || "";
+          const playingAsWhite = game.white.name === username;
+          const playingAsBlack = game.black.name === username;
+
+          if (colorFilter === Color.White && !playingAsWhite) {
+            return false;
+          }
+          if (colorFilter === Color.Black && !playingAsBlack) {
+            return false;
+          }
+        }
+
+        // Opening filter
+        if (openingFilter && !game.event?.toLowerCase().includes(openingFilter.toLowerCase())) {
+          return false;
+        }
+
+        // ELO Range filter
+        const whiteElo = game.white.rating || 0;
+        const blackElo = game.black.rating || 0;
+        const username = localStorage.getItem("username") || "";
+        const playerElo = game.white.name === username ? whiteElo : blackElo;
+        
+        if (playerElo < eloRangeFilter[0] || playerElo > eloRangeFilter[1]) {
+          return false;
+        }
+
+        // Custom Tags filter
+        if (customTagFilter && customTagFilter.trim() !== "") {
+          const searchTerm = customTagFilter.toLowerCase().trim();
+          if (!game.tags || !game.tags.some(tag => 
+            tag.toLowerCase().includes(searchTerm)
+          )) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+
+      setFilteredGames(filtered);
+    };
+
+    filterGames();
+  }, [games, platformFilter, resultFilter, colorFilter, openingFilter, showFavoritesOnly, eloRangeFilter, customTagFilter, folderFilter, getFolderGames]);
 
   const handleDeleteGameRow = useCallback(
     (id: GridRowId) => async () => {
@@ -123,6 +143,22 @@ export default function GameDatabase() {
     },
     [deleteGame]
   );
+
+  const handleBulkDelete = async (gameIds: number[]) => {
+    for (const id of gameIds) {
+      await deleteGame(id);
+    }
+    setSelectedRows([]);
+  };
+
+  const handleBulkTag = async (gameIds: number[], tags: string[]) => {
+    for (const id of gameIds) {
+      const game = games.find(g => g.id === id);
+      if (game) {
+        await updateGame(id, { ...game, tags });
+      }
+    }
+  };
 
   const handleCopyGameRow = useCallback(
     (id: GridRowId) => async () => {
@@ -156,6 +192,11 @@ export default function GameDatabase() {
     },
     [updateGame]
   );
+
+  const handleBulkMoveToFolder = async (gameIds: number[], folderId: number) => {
+    await moveGamesToFolder(gameIds, folderId);
+    setSelectedRows([]);
+  };
 
   const columns: GridColDef[] = useMemo(
     () => [
@@ -412,6 +453,13 @@ export default function GameDatabase() {
         <DatabaseFilters />
       </Grid>
 
+      <BulkActions
+        selectedGames={selectedRows.map(id => games.find(g => g.id === id)).filter((g): g is Game => !!g)}
+        onBulkDelete={handleBulkDelete}
+        onBulkTag={handleBulkTag}
+        onBulkMoveToFolder={handleBulkMoveToFolder}
+      />
+
       <Grid maxWidth="100%" minWidth="50px">
         <DataGrid
           aria-label="Games list"
@@ -420,6 +468,11 @@ export default function GameDatabase() {
           disableColumnMenu
           hideFooter={true}
           localeText={gridLocaleText}
+          checkboxSelection
+          onRowSelectionModelChange={(newSelection) => {
+            setSelectedRows(newSelection);
+          }}
+          rowSelectionModel={selectedRows}
           initialState={{
             sorting: {
               sortModel: [
