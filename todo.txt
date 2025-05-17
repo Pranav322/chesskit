@@ -1,0 +1,1 @@
+change magnuscarlesen to users name in openings in create insight 
