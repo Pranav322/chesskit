@@ -21,3 +21,4 @@ tsconfig.tsbuildinfo
 cdk.out
 cdk.context.json
 firebase-debug.log
+firebase-debug.log
