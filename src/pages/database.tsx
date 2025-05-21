@@ -1,4 +1,4 @@
-import { Grid2 as Grid, Typography, Box, IconButton, Tooltip, Chip } from "@mui/material";
+import { Grid2 as Grid, Typography, Box, IconButton, Tooltip, Chip, Snackbar, Menu, MenuItem } from "@mui/material";
 import { Icon } from "@iconify/react";
 import {
   DataGrid,
@@ -34,6 +34,9 @@ import NotesDialog from "@/sections/database/notesDialog";
 import { Game } from "@/types/game";
 import TagsDialog from "@/sections/database/tagsDialog";
 import BulkActions from "@/sections/database/bulkActions";
+import { exportPgnWithAnnotations } from "@/lib/chess";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { GamePDF } from "@/components/GamePDF";
 
 const gridLocaleText: GridLocaleText = {
   ...GRID_DEFAULT_LOCALE_TEXT,
@@ -49,6 +52,9 @@ export default function GameDatabase() {
   const [isTagsDialogOpen, setIsTagsDialogOpen] = useState(false);
   const [selectedRows, setSelectedRows] = useState<GridRowSelectionModel>([]);
   const [filteredGames, setFilteredGames] = useState<Game[]>([]);
+  const [showExportSuccess, setShowExportSuccess] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedExportGame, setSelectedExportGame] = useState<Game | null>(null);
 
   // Get filter values
   const platformFilter = useAtomValue(platformFilterAtom);
@@ -198,6 +204,29 @@ export default function GameDatabase() {
     setSelectedRows([]);
   };
 
+  const handleExportClick = (game: Game) => (event: React.MouseEvent<HTMLElement>) => {
+    setSelectedExportGame(game);
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleExportClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleExportWithAnnotations = useCallback(
+    (game: Game) => async () => {
+      try {
+        const pgnWithAnnotations = exportPgnWithAnnotations(game);
+        await navigator.clipboard.writeText(pgnWithAnnotations);
+        setShowExportSuccess(true);
+        handleExportClose();
+      } catch (error) {
+        console.error("Failed to export PGN:", error);
+      }
+    },
+    []
+  );
+
   const columns: GridColDef[] = useMemo(
     () => [
       {
@@ -318,41 +347,19 @@ export default function GameDatabase() {
         },
       },
       {
-        field: "delete",
+        field: "actions",
         type: "actions",
-        headerName: "Delete",
-        width: 100,
-        cellClassName: "actions",
-        getActions: ({ id }) => {
+        width: 50,
+        getActions: (params) => {
+          const game = games.find((g) => g.id === params.id);
+          if (!game) return [];
+
           return [
             <GridActionsCellItem
-              icon={
-                <Icon icon="mdi:delete-outline" color={red[400]} width="20px" />
-              }
-              label="Delete"
-              onClick={handleDeleteGameRow(id)}
-              color="inherit"
-              key={`${id}-delete-button`}
-            />,
-          ];
-        },
-      },
-      {
-        field: "copy pgn",
-        type: "actions",
-        headerName: "Copy pgn",
-        width: 100,
-        cellClassName: "actions",
-        getActions: ({ id }) => {
-          return [
-            <GridActionsCellItem
-              icon={
-                <Icon icon="ri:clipboard-line" color={blue[400]} width="20px" />
-              }
-              label="Copy pgn"
-              onClick={handleCopyGameRow(id)}
-              color="inherit"
-              key={`${id}-copy-button`}
+              key="more"
+              icon={<Icon icon="mdi:dots-vertical" />}
+              label="More options"
+              onClick={handleExportClick(game)}
             />,
           ];
         },
@@ -431,7 +438,7 @@ export default function GameDatabase() {
         },
       },
     ],
-    [handleDeleteGameRow, handleCopyGameRow, handleToggleFavorite, router]
+    [handleDeleteGameRow, handleToggleFavorite, handleExportClick]
   );
 
   return (
@@ -502,6 +509,62 @@ export default function GameDatabase() {
           />
         </>
       )}
+
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleExportClose}
+      >
+        <MenuItem onClick={handleToggleFavorite(selectedExportGame!)}>
+          <Icon 
+            icon={selectedExportGame?.isFavorite ? "mdi:star" : "mdi:star-outline"} 
+            style={{ marginRight: 8 }} 
+          />
+          {selectedExportGame?.isFavorite ? "Remove from favorites" : "Add to favorites"}
+        </MenuItem>
+        <MenuItem 
+          onClick={() => {
+            setSelectedGame(selectedExportGame);
+            setIsNotesDialogOpen(true);
+            handleExportClose();
+          }}
+        >
+          <Icon icon="mdi:note-edit" style={{ marginRight: 8 }} />
+          {selectedExportGame?.notes ? "Edit notes" : "Add notes"}
+        </MenuItem>
+        <MenuItem onClick={handleExportWithAnnotations(selectedExportGame!)}>
+          <Icon icon="mdi:content-copy" style={{ marginRight: 8 }} />
+          Copy PGN to clipboard
+        </MenuItem>
+        {selectedExportGame && (
+          <PDFDownloadLink
+            document={<GamePDF game={selectedExportGame} />}
+            fileName={`chess-game-${selectedExportGame.white.name}-vs-${selectedExportGame.black.name}.pdf`}
+            style={{ textDecoration: "none", color: "inherit" }}
+          >
+            {({ loading }) => (
+              <MenuItem disabled={loading}>
+                <Icon icon="mdi:file-pdf-box" style={{ marginRight: 8 }} />
+                {loading ? "Preparing PDF..." : "Download as PDF"}
+              </MenuItem>
+            )}
+          </PDFDownloadLink>
+        )}
+        <MenuItem
+          onClick={handleDeleteGameRow(selectedExportGame?.id!)}
+          sx={{ color: "error.main" }}
+        >
+          <Icon icon="mdi:delete" style={{ marginRight: 8 }} />
+          Delete game
+        </MenuItem>
+      </Menu>
+
+      <Snackbar
+        open={showExportSuccess}
+        autoHideDuration={3000}
+        onClose={() => setShowExportSuccess(false)}
+        message="PGN with annotations copied to clipboard"
+      />
     </Box>
   );
 }

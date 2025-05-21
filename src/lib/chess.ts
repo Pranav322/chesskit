@@ -378,3 +378,45 @@ export const formatUciPv = (fen: string, uciMoves: string[]): string[] => {
     return uci;
   });
 };
+
+export const exportPgnWithAnnotations = (game: Game): string => {
+  // Start with the base PGN
+  let pgn = game.pgn;
+
+  // If there are notes, add them as a comment before the first move
+  if (game.notes) {
+    // Remove any existing comments at the start to avoid duplication
+    pgn = pgn.replace(/^\{[^}]*\}\s*/, "");
+    
+    // Add the notes as a PGN comment
+    const cleanedNotes = game.notes.replace(/[{}]/g, ""); // Remove any existing curly braces
+    // Find the position after the header section (after the last "]")
+    const lastTagIndex = pgn.lastIndexOf("]");
+    if (lastTagIndex !== -1) {
+      // Insert notes after the header section and before the moves
+      pgn = pgn.slice(0, lastTagIndex + 1) + 
+        "\n\n{" + cleanedNotes + "}\n\n" + 
+        pgn.slice(lastTagIndex + 1).trim();
+    } else {
+      pgn = `{${cleanedNotes}}\n\n${pgn}`;
+    }
+  }
+
+  // If there are custom tags, add them as PGN tags
+  if (game.tags && game.tags.length > 0) {
+    // Convert tags to PGN format
+    const tagSection = game.tags
+      .map((tag) => `[Custom "${tag}"]`)
+      .join("\n");
+    
+    // Insert tags after the last standard tag and before the moves
+    const lastTagIndex = pgn.lastIndexOf("]");
+    if (lastTagIndex !== -1) {
+      pgn = pgn.slice(0, lastTagIndex + 1) + 
+        "\n" + tagSection + 
+        pgn.slice(lastTagIndex + 1);
+    }
+  }
+
+  return pgn;
+};

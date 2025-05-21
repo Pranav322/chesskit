@@ -21,13 +21,15 @@ import {
   Chip,
   LinearProgress
 } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { GameInsights, OpeningStats, PositionAnalysis, WeaknessAnalysis } from '@/types/insights';
 import { generateGameInsights } from '@/lib/services/insightsService';
 import { useGameDatabase } from '@/hooks/useGameDatabase';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { generateInsightsPDF } from '@/lib/services/pdfService';
 import DownloadIcon from '@mui/icons-material/Download';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import SectionSelectionDialog, { InsightSection } from './SectionSelectionDialog';
 
 interface Props {
   open: boolean;
@@ -71,6 +73,8 @@ function OpeningStatsTable({ stats, title }: { stats: OpeningStats[]; title: str
               <TableCell align="right">Games</TableCell>
               <TableCell align="right">Win %</TableCell>
               <TableCell align="right">W/D/L</TableCell>
+              <TableCell align="right">Accuracy</TableCell>
+              <TableCell>Common Next Moves</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -83,6 +87,18 @@ function OpeningStatsTable({ stats, title }: { stats: OpeningStats[]; title: str
                 <TableCell align="right">{Math.round(opening.winRate)}%</TableCell>
                 <TableCell align="right">
                   {opening.wins}/{opening.draws}/{opening.losses}
+                </TableCell>
+                <TableCell align="right">
+                  {Math.round(opening.averageAccuracy)}%
+                </TableCell>
+                <TableCell>
+                  <Box>
+                    {opening.nextMoves.map((move, index) => (
+                      <Typography key={index} variant="body2" sx={{ mb: 0.5 }}>
+                        {move.move}: {move.count} games ({Math.round(move.winRate)}% win, {Math.round(move.averageAccuracy)}% acc)
+                      </Typography>
+                    ))}
+                  </Box>
                 </TableCell>
               </TableRow>
             ))}
@@ -301,11 +317,123 @@ function WeaknessesSection({ weaknesses }: { weaknesses: WeaknessAnalysis[] }) {
   );
 }
 
+function TrendsSection({ insights }: { insights: GameInsights }) {
+  return (
+    <Grid container spacing={3}>
+      {/* Accuracy Trend */}
+      <Grid item xs={12}>
+        <Paper sx={{ p: 2 }}>
+          <Typography variant="h6" gutterBottom>Accuracy Trend</Typography>
+          <Box sx={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer>
+              <LineChart data={insights.trends}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="date" 
+                  tickFormatter={(date) => new Date(date).toLocaleDateString()}
+                />
+                <YAxis domain={[0, 100]} />
+                <Tooltip 
+                  labelFormatter={(date) => new Date(date).toLocaleDateString()}
+                  formatter={(value: number) => [`${value.toFixed(1)}%`]}
+                />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="accuracy" 
+                  stroke="#8884d8" 
+                  name="Overall Accuracy" 
+                  strokeWidth={2}
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </Box>
+        </Paper>
+      </Grid>
+
+      {/* Win Rate Trend */}
+      <Grid item xs={12}>
+        <Paper sx={{ p: 2 }}>
+          <Typography variant="h6" gutterBottom>Win Rate Trend</Typography>
+          <Box sx={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer>
+              <LineChart data={insights.trends}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="date" 
+                  tickFormatter={(date) => new Date(date).toLocaleDateString()}
+                />
+                <YAxis domain={[0, 100]} />
+                <Tooltip 
+                  labelFormatter={(date) => new Date(date).toLocaleDateString()}
+                  formatter={(value: number) => [`${value.toFixed(1)}%`]}
+                />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="winRate" 
+                  stroke="#82ca9d" 
+                  name="Win Rate" 
+                  strokeWidth={2}
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </Box>
+        </Paper>
+      </Grid>
+
+      {/* Opening Performance Trend */}
+      <Grid item xs={12}>
+        <Paper sx={{ p: 2 }}>
+          <Typography variant="h6" gutterBottom>Opening Performance</Typography>
+          <Box sx={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer>
+              <LineChart data={insights.trends}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="date" 
+                  tickFormatter={(date) => new Date(date).toLocaleDateString()}
+                />
+                <YAxis domain={[0, 100]} />
+                <Tooltip 
+                  labelFormatter={(date) => new Date(date).toLocaleDateString()}
+                  formatter={(value: number) => [`${value.toFixed(1)}%`]}
+                />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="openingAccuracy" 
+                  stroke="#ffc658" 
+                  name="Opening Accuracy" 
+                  strokeWidth={2}
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </Box>
+        </Paper>
+      </Grid>
+    </Grid>
+  );
+}
+
 export default function GameInsightsDialog({ open, onClose, userId }: Props) {
   const [insights, setInsights] = useState<GameInsights | null>(null);
   const [loading, setLoading] = useState(false);
   const [tabValue, setTabValue] = useState(0);
   const { getUserGames } = useGameDatabase();
+  const [sectionSelectionOpen, setSectionSelectionOpen] = useState(false);
+  const [triggerDownload, setTriggerDownload] = useState(false);
+  const downloadLinkRef = useRef<HTMLAnchorElement>(null);
+  const [selectedSections, setSelectedSections] = useState<InsightSection[]>([
+    { id: "performance", label: "Performance Stats", checked: true },
+    { id: "timeControls", label: "Time Controls", checked: true },
+    { id: "accuracy", label: "Accuracy Analysis", checked: true },
+    { id: "openings", label: "Opening Analysis", checked: true },
+    { id: "weaknesses", label: "Areas for Improvement", checked: true },
+  ]);
 
   useEffect(() => {
     const loadInsights = async () => {
@@ -326,6 +454,36 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
     loadInsights();
   }, [open, userId]);
 
+  const handleExport = useCallback(() => {
+    setTriggerDownload(true);
+    setSectionSelectionOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (!triggerDownload || !insights) return;
+
+    const timer = setInterval(() => {
+      const link = downloadLinkRef.current;
+      if (link) {
+        link.click();
+        setTriggerDownload(false);
+        clearInterval(timer);
+      }
+    }, 100);
+
+    // Clear interval after 5 seconds if download hasn't started
+    const timeout = setTimeout(() => {
+      clearInterval(timer);
+      setTriggerDownload(false);
+      console.error("PDF download timed out");
+    }, 5000);
+
+    return () => {
+      clearInterval(timer);
+      clearTimeout(timeout);
+    };
+  }, [triggerDownload, insights]);
+
   const formatPercentage = (value: number) => `${Math.round(value)}%`;
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -340,22 +498,14 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
         Game Insights
         {insights && (
           <Box sx={{ position: 'absolute', right: 16, top: 8 }}>
-            <PDFDownloadLink
-              document={generateInsightsPDF(insights)}
-              fileName="chess-insights.pdf"
-              style={{ textDecoration: 'none' }}
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<DownloadIcon />}
+              onClick={() => setSectionSelectionOpen(true)}
             >
-              {({ blob, url, loading, error }) => (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<DownloadIcon />}
-                  disabled={loading}
-                >
-                  Export PDF
-                </Button>
-              )}
-            </PDFDownloadLink>
+              Export PDF
+            </Button>
           </Box>
         )}
       </DialogTitle>
@@ -373,6 +523,7 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
                 <Tab label="Accuracy" />
                 <Tab label="Critical Positions" />
                 <Tab label="Weaknesses" />
+                <Tab label="Trends" />
               </Tabs>
             </Box>
 
@@ -499,6 +650,11 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
               <Typography variant="h6" gutterBottom>Areas for Improvement</Typography>
               <WeaknessesSection weaknesses={insights.weaknesses} />
             </TabPanel>
+
+            <TabPanel value={tabValue} index={5}>
+              <Typography variant="h6" gutterBottom>Performance Trends</Typography>
+              <TrendsSection insights={insights} />
+            </TabPanel>
           </>
         ) : (
           <Typography>No games found to analyze.</Typography>
@@ -507,6 +663,45 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
       <DialogActions>
         <Button onClick={onClose}>Close</Button>
       </DialogActions>
+
+      <SectionSelectionDialog
+        open={sectionSelectionOpen}
+        onClose={() => setSectionSelectionOpen(false)}
+        sections={selectedSections}
+        onSectionsChange={setSelectedSections}
+        onExport={handleExport}
+      />
+
+      {insights && triggerDownload && (
+        <Box sx={{ display: "none" }}>
+          <PDFDownloadLink
+            document={generateInsightsPDF(insights, selectedSections)}
+            fileName="chess-insights.pdf"
+          >
+            {({ blob, url, loading, error }) => {
+              if (error) {
+                console.error("PDF generation error:", error);
+                setTriggerDownload(false);
+                return null;
+              }
+              
+              if (!loading && url) {
+                return (
+                  <a 
+                    href={url} 
+                    ref={downloadLinkRef}
+                    download="chess-insights.pdf"
+                  >
+                    download
+                  </a>
+                );
+              }
+              
+              return null;
+            }}
+          </PDFDownloadLink>
+        </Box>
+      )}
     </Dialog>
   );
 } 

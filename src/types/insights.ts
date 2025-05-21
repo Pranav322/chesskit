@@ -6,6 +6,16 @@ export interface OpeningStats {
   losses: number;
   draws: number;
   winRate: number;
+  averageAccuracy: number;
+  nextMoves: {
+    move: string;
+    count: number;
+    wins: number;
+    losses: number;
+    draws: number;
+    winRate: number;
+    averageAccuracy: number;
+  }[];
 }
 
 export interface PositionAnalysis {
@@ -49,30 +59,23 @@ export interface WeaknessAnalysis {
   }[];
 }
 
+export interface GameTrendData {
+  date: string;
+  accuracy: number;
+  winRate: number;
+  openingAccuracy: number;
+  games: number;
+}
+
 export interface GameInsights {
   userId: string;
   generatedAt: Date;
   totalGames: number;
   winLossRatio: {
-    white: {
-      wins: number;
-      losses: number;
-      draws: number;
-      winRate: number;
-    };
-    black: {
-      wins: number;
-      losses: number;
-      draws: number;
-      winRate: number;
-    };
+    white: ColorStats;
+    black: ColorStats;
   };
-  timeControls: {
-    bullet: number;
-    blitz: number;
-    rapid: number;
-    classical: number;
-  };
+  timeControls: TimeControlStats;
   averageGameLength: number;
   openings: {
     asWhite: OpeningStats[];
@@ -84,6 +87,7 @@ export interface GameInsights {
   accuracy: AccuracyStats;
   criticalPositions: PositionAnalysis[];
   weaknesses: WeaknessAnalysis[];
+  trends: GameTrendData[];
 }
 
 export interface TimeControlStats {
