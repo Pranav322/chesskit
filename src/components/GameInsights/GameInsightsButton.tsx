@@ -1,7 +1,7 @@
-import { Button } from '@mui/material';
-import BarChartIcon from '@mui/icons-material/BarChart';
-import { useState } from 'react';
-import GameInsightsDialog from './GameInsightsDialog';
+import { Button } from "@mui/material";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import { useState } from "react";
+import GameInsightsDialog from "./GameInsightsDialog";
 
 interface Props {
   userId: string;
@@ -23,11 +23,7 @@ export default function GameInsightsButton({ userId }: Props) {
       >
         Create Insights
       </Button>
-      <GameInsightsDialog
-        open={open}
-        onClose={handleClose}
-        userId={userId}
-      />
+      <GameInsightsDialog open={open} onClose={handleClose} userId={userId} />
     </>
   );
-} 
+}

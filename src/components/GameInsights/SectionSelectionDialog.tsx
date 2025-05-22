@@ -7,8 +7,8 @@ import {
   FormGroup,
   FormControlLabel,
   Checkbox,
-  Typography
-} from '@mui/material';
+  Typography,
+} from "@mui/material";
 
 export interface InsightSection {
   id: string;
@@ -24,19 +24,27 @@ interface Props {
   onExport: () => void;
 }
 
-export default function SectionSelectionDialog({ open, onClose, sections, onSectionsChange, onExport }: Props) {
+export default function SectionSelectionDialog({
+  open,
+  onClose,
+  sections,
+  onSectionsChange,
+  onExport,
+}: Props) {
   const handleSectionToggle = (sectionId: string) => {
-    const updatedSections = sections.map(section =>
-      section.id === sectionId ? { ...section, checked: !section.checked } : section
+    const updatedSections = sections.map((section) =>
+      section.id === sectionId
+        ? { ...section, checked: !section.checked }
+        : section,
     );
     onSectionsChange(updatedSections);
   };
 
   const handleSelectAll = () => {
-    const allChecked = sections.every(section => section.checked);
-    const updatedSections = sections.map(section => ({
+    const allChecked = sections.every((section) => section.checked);
+    const updatedSections = sections.map((section) => ({
       ...section,
-      checked: !allChecked
+      checked: !allChecked,
     }));
     onSectionsChange(updatedSections);
   };
@@ -54,7 +62,9 @@ export default function SectionSelectionDialog({ open, onClose, sections, onSect
           onClick={handleSelectAll}
           sx={{ mb: 2 }}
         >
-          {sections.every(section => section.checked) ? 'Deselect All' : 'Select All'}
+          {sections.every((section) => section.checked)
+            ? "Deselect All"
+            : "Select All"}
         </Button>
         <FormGroup>
           {sections.map((section) => (
@@ -76,11 +86,11 @@ export default function SectionSelectionDialog({ open, onClose, sections, onSect
         <Button
           onClick={onExport}
           variant="contained"
-          disabled={!sections.some(section => section.checked)}
+          disabled={!sections.some((section) => section.checked)}
         >
           Export PDF
         </Button>
       </DialogActions>
     </Dialog>
   );
-} 
+}

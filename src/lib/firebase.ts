@@ -33,7 +33,7 @@ isSupported().then((supported) => {
 
 export const logAnalyticsEvent = (
   eventName: string,
-  eventParams?: Record<string, unknown>
+  eventParams?: Record<string, unknown>,
 ) => {
   if (!analytics) return;
   logEvent(analytics, eventName, eventParams);

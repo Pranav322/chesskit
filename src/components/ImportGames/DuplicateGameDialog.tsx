@@ -7,11 +7,11 @@ import {
   Typography,
   Box,
   Grid,
-  Paper
-} from '@mui/material';
-import { ImportedGameData } from '@/types/database';
-import { DuplicateCheckResult } from '@/lib/services/duplicateGameService';
-import { formatDate } from '@/lib/utils/dateUtils';
+  Paper,
+} from "@mui/material";
+import { ImportedGameData } from "@/types/database";
+import { DuplicateCheckResult } from "@/lib/services/duplicateGameService";
+import { formatDate } from "@/lib/utils/dateUtils";
 
 interface Props {
   open: boolean;
@@ -30,14 +30,18 @@ const GameDetails = ({ game }: { game: ImportedGameData }) => (
       {formatDate(game.metadata.date.toDate())}
     </Typography>
     <Typography>
-      White: {game.metadata.white.name} ({game.metadata.white.rating || 'Unrated'})
+      White: {game.metadata.white.name} (
+      {game.metadata.white.rating || "Unrated"})
     </Typography>
     <Typography>
-      Black: {game.metadata.black.name} ({game.metadata.black.rating || 'Unrated'})
+      Black: {game.metadata.black.name} (
+      {game.metadata.black.rating || "Unrated"})
     </Typography>
-    <Typography>Time Control: {game.metadata.timeControl || 'Unknown'}</Typography>
-    <Typography>Result: {game.metadata.result || 'Unknown'}</Typography>
-    <Typography>Opening: {game.metadata.opening || 'Unknown'}</Typography>
+    <Typography>
+      Time Control: {game.metadata.timeControl || "Unknown"}
+    </Typography>
+    <Typography>Result: {game.metadata.result || "Unknown"}</Typography>
+    <Typography>Opening: {game.metadata.opening || "Unknown"}</Typography>
   </Paper>
 );
 
@@ -49,7 +53,7 @@ export default function DuplicateGameDialog({
   duplicateResult,
   onSkip,
   onOverwrite,
-  onImportAsNew
+  onImportAsNew,
 }: Props) {
   const handleSkip = () => {
     onSkip();
@@ -70,35 +74,38 @@ export default function DuplicateGameDialog({
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
         Duplicate Game Detected
-        {duplicateResult.matchReason === 'similar' && (
+        {duplicateResult.matchReason === "similar" && (
           <Typography variant="subtitle2" color="text.secondary">
-            Similarity Score: {Math.round(duplicateResult.similarityScore! * 100)}%
+            Similarity Score:{" "}
+            {Math.round(duplicateResult.similarityScore! * 100)}%
           </Typography>
         )}
       </DialogTitle>
       <DialogContent>
         <Typography gutterBottom>
-          {duplicateResult.matchReason === 'exact'
-            ? 'An exact match of this game was found in your database.'
-            : 'A similar game was found in your database.'}
+          {duplicateResult.matchReason === "exact"
+            ? "An exact match of this game was found in your database."
+            : "A similar game was found in your database."}
         </Typography>
 
         <Box sx={{ mt: 2 }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
-              <Typography variant="h6" gutterBottom>New Game</Typography>
+              <Typography variant="h6" gutterBottom>
+                New Game
+              </Typography>
               <GameDetails game={newGame} />
             </Grid>
             <Grid item xs={12} md={6}>
-              <Typography variant="h6" gutterBottom>Existing Game</Typography>
+              <Typography variant="h6" gutterBottom>
+                Existing Game
+              </Typography>
               <GameDetails game={existingGame} />
             </Grid>
           </Grid>
         </Box>
 
-        <Typography sx={{ mt: 2 }}>
-          How would you like to proceed?
-        </Typography>
+        <Typography sx={{ mt: 2 }}>How would you like to proceed?</Typography>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleSkip} color="primary">
@@ -113,4 +120,4 @@ export default function DuplicateGameDialog({
       </DialogActions>
     </Dialog>
   );
-} 
+}

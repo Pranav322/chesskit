@@ -33,8 +33,8 @@ export class UciEngine {
     engineName: EngineName,
     workers: EngineWorker[],
     customEngineInit?: (
-      sendCommands: UciEngine["sendCommands"]
-    ) => Promise<void>
+      sendCommands: UciEngine["sendCommands"],
+    ) => Promise<void>,
   ): Promise<UciEngine> {
     const engine = new UciEngine(engineName, workers);
 
@@ -69,7 +69,7 @@ export class UciEngine {
       this.sendCommands(
         nextJob.commands,
         nextJob.finalMessage,
-        nextJob.onNewMessage
+        nextJob.onNewMessage,
       ).then(nextJob.resolve);
     }
   }
@@ -87,7 +87,7 @@ export class UciEngine {
 
     await this.broadcastCommands(
       [`setoption name MultiPV value ${multiPv}`, "isready"],
-      "readyok"
+      "readyok",
     );
 
     this.multiPv = multiPv;
@@ -106,12 +106,12 @@ export class UciEngine {
 
     await this.broadcastCommands(
       ["setoption name UCI_LimitStrength value true", "isready"],
-      "readyok"
+      "readyok",
     );
 
     await this.broadcastCommands(
       [`setoption name UCI_Elo value ${elo}`, "isready"],
-      "readyok"
+      "readyok",
     );
 
     this.elo = elo;
@@ -152,7 +152,7 @@ export class UciEngine {
   private async sendCommands(
     commands: string[],
     finalMessage: string,
-    onNewMessage?: (messages: string[]) => void
+    onNewMessage?: (messages: string[]) => void,
   ): Promise<string[]> {
     const worker = this.acquireWorker();
 
@@ -171,7 +171,7 @@ export class UciEngine {
       worker,
       commands,
       finalMessage,
-      onNewMessage
+      onNewMessage,
     );
   }
 
@@ -179,7 +179,7 @@ export class UciEngine {
     worker: EngineWorker,
     commands: string[],
     finalMessage: string,
-    onNewMessage?: (messages: string[]) => void
+    onNewMessage?: (messages: string[]) => void,
   ): Promise<string[]> {
     return new Promise((resolve) => {
       const messages: string[] = [];
@@ -201,12 +201,12 @@ export class UciEngine {
   private async broadcastCommands(
     commands: string[],
     finalMessage: string,
-    onNewMessage?: (messages: string[]) => void
+    onNewMessage?: (messages: string[]) => void,
   ): Promise<void> {
     await Promise.all(
       this.workers.map((worker) =>
-        this.sendCommandsToWorker(worker, commands, finalMessage, onNewMessage)
-      )
+        this.sendCommandsToWorker(worker, commands, finalMessage, onNewMessage),
+      ),
     );
   }
 
@@ -269,19 +269,19 @@ export class UciEngine {
 
         const result = await this.evaluatePosition(fen, depth);
         updateEval(i, result);
-      })
+      }),
     );
 
     const positionsWithClassification = getMovesClassification(
       positions,
       uciMoves,
-      fens
+      fens,
     );
     const accuracy = computeAccuracy(positions);
     const estimatedElo = computeEstimatedElo(
       positions,
       playersRatings?.white,
-      playersRatings?.black
+      playersRatings?.black,
     );
 
     this.isReady = true;
@@ -300,7 +300,7 @@ export class UciEngine {
 
   private async evaluatePosition(
     fen: string,
-    depth = 16
+    depth = 16,
   ): Promise<PositionEval> {
     if (this.workers.length < 2) {
       const lichessEval = await getLichessEval(fen, this.multiPv);
@@ -314,7 +314,7 @@ export class UciEngine {
 
     const results = await this.sendCommands(
       [`position fen ${fen}`, `go depth ${depth}`],
-      "bestmove"
+      "bestmove",
     );
 
     return parseEvaluationResults(results, fen);
@@ -353,7 +353,7 @@ export class UciEngine {
     const results = await this.sendCommands(
       [`position fen ${fen}`, `go depth ${depth}`],
       "bestmove",
-      onNewMessage
+      onNewMessage,
     );
 
     return parseEvaluationResults(results, fen);
@@ -362,7 +362,7 @@ export class UciEngine {
   public async getEngineNextMove(
     fen: string,
     elo: number,
-    depth = 16
+    depth = 16,
   ): Promise<string | undefined> {
     this.throwErrorIfNotReady();
     await this.setElo(elo);
@@ -371,7 +371,7 @@ export class UciEngine {
 
     const results = await this.sendCommands(
       [`position fen ${fen}`, `go depth ${depth}`],
-      "bestmove"
+      "bestmove",
     );
 
     const moveResult = results.find((result) => result.startsWith("bestmove"));

@@ -100,7 +100,7 @@ export default function Layout({ children }: PropsWithChildren) {
           },
         },
       }),
-    [useDarkMode]
+    [useDarkMode],
   );
 
   if (useDarkMode === null) return null;
@@ -116,4 +116,3 @@ export default function Layout({ children }: PropsWithChildren) {
     </ThemeProvider>
   );
 }
-  

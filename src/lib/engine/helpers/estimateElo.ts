@@ -4,7 +4,7 @@ import { EstimatedElo, PositionEval } from "@/types/eval";
 export const computeEstimatedElo = (
   positions: PositionEval[],
   whiteElo?: number,
-  blackElo?: number
+  blackElo?: number,
 ): EstimatedElo | undefined => {
   if (positions.length < 2) {
     return undefined;
@@ -14,11 +14,11 @@ export const computeEstimatedElo = (
 
   const whiteEstimatedElo = getEloFromRatingAndCpl(
     whiteCpl,
-    whiteElo ?? blackElo
+    whiteElo ?? blackElo,
   );
   const blackEstimatedElo = getEloFromRatingAndCpl(
     blackCpl,
-    blackElo ?? whiteElo
+    blackElo ?? whiteElo,
   );
 
   return { white: whiteEstimatedElo, black: blackEstimatedElo };
@@ -39,7 +39,7 @@ const getPositionCp = (position: PositionEval): number => {
 };
 
 const getPlayersAverageCpl = (
-  positions: PositionEval[]
+  positions: PositionEval[],
 ): { whiteCpl: number; blackCpl: number } => {
   let previousCp = getPositionCp(positions[0]);
 
@@ -56,7 +56,7 @@ const getPlayersAverageCpl = (
       previousCp = cp;
       return acc;
     },
-    { whiteCpl: 0, blackCpl: 0 }
+    { whiteCpl: 0, blackCpl: 0 },
   );
 
   return {
@@ -74,7 +74,7 @@ const getAverageCplFromElo = (elo: number) =>
 
 const getEloFromRatingAndCpl = (
   gameCpl: number,
-  rating: number | undefined
+  rating: number | undefined,
 ): number => {
   const eloFromCpl = getEloFromAverageCpl(gameCpl);
   if (!rating) return eloFromCpl;

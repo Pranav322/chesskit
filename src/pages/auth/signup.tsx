@@ -1,3 +1,4 @@
+import React from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { useRouter } from "next/router";
@@ -71,7 +72,7 @@ export default function SignUp() {
             break;
           case "auth/operation-not-allowed":
             setError(
-              "Email/password accounts are not enabled. Please contact support"
+              "Email/password accounts are not enabled. Please contact support",
             );
             break;
           case "auth/weak-password":
@@ -104,12 +105,12 @@ export default function SignUp() {
             break;
           case "auth/popup-blocked":
             setError(
-              "Pop-up blocked by browser. Please allow pop-ups for this site"
+              "Pop-up blocked by browser. Please allow pop-ups for this site",
             );
             break;
           case "auth/account-exists-with-different-credential":
             setError(
-              "An account already exists with the same email but different sign-in method"
+              "An account already exists with the same email but different sign-in method",
             );
             break;
           default:

@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 
 export const useEngine = (
   engineName: EngineName | undefined,
-  workersNb?: number
+  workersNb?: number,
 ) => {
   const [engine, setEngine] = useState<UciEngine | null>(null);
 
@@ -33,7 +33,7 @@ export const useEngine = (
 
 const pickEngine = (
   engine: EngineName,
-  workersNb?: number
+  workersNb?: number,
 ): Promise<UciEngine> => {
   switch (engine) {
     case EngineName.Stockfish17:

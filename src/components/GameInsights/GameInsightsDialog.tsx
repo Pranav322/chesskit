@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -17,19 +18,68 @@ import {
   TableRow,
   Tabs,
   Tab,
-  Divider,
   Chip,
-  LinearProgress
-} from '@mui/material';
-import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
-import { GameInsights, OpeningStats, PositionAnalysis, WeaknessAnalysis } from '@/types/insights';
-import { generateGameInsights } from '@/lib/services/insightsService';
-import { useGameDatabase } from '@/hooks/useGameDatabase';
-import { PDFDownloadLink } from '@react-pdf/renderer';
-import { generateInsightsPDF } from '@/lib/services/pdfService';
-import DownloadIcon from '@mui/icons-material/Download';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import SectionSelectionDialog, { InsightSection } from './SectionSelectionDialog';
+  LinearProgress,
+} from "@mui/material";
+import { useEffect, useState, useRef, useCallback } from "react";
+import {
+  GameInsights,
+  OpeningStats,
+  PositionAnalysis,
+  WeaknessAnalysis,
+} from "@/types/insights";
+import { generateGameInsights } from "@/lib/services/insightsService";
+import { useGameDatabase } from "@/hooks/useGameDatabase";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { generateInsightsPDF } from "@/lib/services/pdfService";
+import DownloadIcon from "@mui/icons-material/Download";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import SectionSelectionDialog, {
+  InsightSection,
+} from "./SectionSelectionDialog";
+import { Game } from "@/types/game";
+import { ImportedGameData } from "@/types/database";
+import { GameOrigin } from "@/types/enums";
+import { Timestamp } from "firebase/firestore";
+
+// Conversion function to transform Game[] to ImportedGameData[]
+const convertToImportedGameData = (games: Game[]): ImportedGameData[] => {
+  return games.map(game => {
+    const platform = game.metadata?.platform ?? GameOrigin.Pgn;
+    return {
+      id: game.id.toString(),
+      userId: game.userId,
+      source: platform,
+      originalId: game.id.toString(),
+      pgn: game.pgn,
+      metadata: {
+        date: Timestamp.fromDate(new Date(game.date || new Date())),
+        platform,
+        opening: game.tags?.find(tag => tag.startsWith('Opening:'))?.split(':')[1]?.trim(),
+        timeControl: game.timeControl,
+        white: {
+          name: game.white.name,
+          rating: game.white.rating
+        },
+        black: {
+          name: game.black.name,
+          rating: game.black.rating
+        }
+      },
+      importedAt: Timestamp.fromDate(new Date()),
+      lastAnalyzedAt: Timestamp.fromDate(new Date())
+    } as ImportedGameData;
+  });
+};
 
 interface Props {
   open: boolean;
@@ -59,12 +109,20 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-function OpeningStatsTable({ stats, title }: { stats: OpeningStats[]; title: string }) {
+function OpeningStatsTable({
+  stats,
+  title,
+}: {
+  stats: OpeningStats[];
+  title: string;
+}) {
   if (!stats.length) return null;
 
   return (
     <Box sx={{ mt: 2 }}>
-      <Typography variant="h6" gutterBottom>{title}</Typography>
+      <Typography variant="h6" gutterBottom>
+        {title}
+      </Typography>
       <TableContainer component={Paper}>
         <Table size="small">
           <TableHead>
@@ -84,7 +142,9 @@ function OpeningStatsTable({ stats, title }: { stats: OpeningStats[]; title: str
                   {opening.name}
                 </TableCell>
                 <TableCell align="right">{opening.count}</TableCell>
-                <TableCell align="right">{Math.round(opening.winRate)}%</TableCell>
+                <TableCell align="right">
+                  {Math.round(opening.winRate)}%
+                </TableCell>
                 <TableCell align="right">
                   {opening.wins}/{opening.draws}/{opening.losses}
                 </TableCell>
@@ -95,7 +155,9 @@ function OpeningStatsTable({ stats, title }: { stats: OpeningStats[]; title: str
                   <Box>
                     {opening.nextMoves.map((move, index) => (
                       <Typography key={index} variant="body2" sx={{ mb: 0.5 }}>
-                        {move.move}: {move.count} games ({Math.round(move.winRate)}% win, {Math.round(move.averageAccuracy)}% acc)
+                        {move.move}: {move.count} games (
+                        {Math.round(move.winRate)}% win,{" "}
+                        {Math.round(move.averageAccuracy)}% acc)
                       </Typography>
                     ))}
                   </Box>
@@ -109,15 +171,19 @@ function OpeningStatsTable({ stats, title }: { stats: OpeningStats[]; title: str
   );
 }
 
-function AccuracySection({ accuracy }: { accuracy: GameInsights['accuracy'] }) {
+function AccuracySection({ accuracy }: { accuracy: GameInsights["accuracy"] }) {
   return (
     <Grid container spacing={3}>
       {/* Overall Accuracy */}
       <Grid item xs={12}>
         <Paper sx={{ p: 2 }}>
-          <Typography variant="h6" gutterBottom>Overall Accuracy</Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="h4">{Math.round(accuracy.overall)}%</Typography>
+          <Typography variant="h6" gutterBottom>
+            Overall Accuracy
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Typography variant="h4">
+              {Math.round(accuracy.overall)}%
+            </Typography>
             <Box sx={{ flexGrow: 1 }}>
               <LinearProgress
                 variant="determinate"
@@ -132,9 +198,13 @@ function AccuracySection({ accuracy }: { accuracy: GameInsights['accuracy'] }) {
       {/* Color-specific Accuracy */}
       <Grid item xs={12} md={6}>
         <Paper sx={{ p: 2 }}>
-          <Typography variant="h6" gutterBottom>As White</Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="h5">{Math.round(accuracy.asWhite)}%</Typography>
+          <Typography variant="h6" gutterBottom>
+            As White
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Typography variant="h5">
+              {Math.round(accuracy.asWhite)}%
+            </Typography>
             <Box sx={{ flexGrow: 1 }}>
               <LinearProgress
                 variant="determinate"
@@ -148,9 +218,13 @@ function AccuracySection({ accuracy }: { accuracy: GameInsights['accuracy'] }) {
 
       <Grid item xs={12} md={6}>
         <Paper sx={{ p: 2 }}>
-          <Typography variant="h6" gutterBottom>As Black</Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="h5">{Math.round(accuracy.asBlack)}%</Typography>
+          <Typography variant="h6" gutterBottom>
+            As Black
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Typography variant="h5">
+              {Math.round(accuracy.asBlack)}%
+            </Typography>
             <Box sx={{ flexGrow: 1 }}>
               <LinearProgress
                 variant="determinate"
@@ -165,11 +239,15 @@ function AccuracySection({ accuracy }: { accuracy: GameInsights['accuracy'] }) {
       {/* Phase Accuracy */}
       <Grid item xs={12}>
         <Paper sx={{ p: 2 }}>
-          <Typography variant="h6" gutterBottom>Accuracy by Game Phase</Typography>
+          <Typography variant="h6" gutterBottom>
+            Accuracy by Game Phase
+          </Typography>
           <Grid container spacing={2}>
             <Grid item xs={4}>
               <Typography variant="subtitle1">Opening</Typography>
-              <Typography variant="h6">{Math.round(accuracy.byPhase.opening)}%</Typography>
+              <Typography variant="h6">
+                {Math.round(accuracy.byPhase.opening)}%
+              </Typography>
               <LinearProgress
                 variant="determinate"
                 value={accuracy.byPhase.opening}
@@ -178,7 +256,9 @@ function AccuracySection({ accuracy }: { accuracy: GameInsights['accuracy'] }) {
             </Grid>
             <Grid item xs={4}>
               <Typography variant="subtitle1">Middlegame</Typography>
-              <Typography variant="h6">{Math.round(accuracy.byPhase.middlegame)}%</Typography>
+              <Typography variant="h6">
+                {Math.round(accuracy.byPhase.middlegame)}%
+              </Typography>
               <LinearProgress
                 variant="determinate"
                 value={accuracy.byPhase.middlegame}
@@ -187,7 +267,9 @@ function AccuracySection({ accuracy }: { accuracy: GameInsights['accuracy'] }) {
             </Grid>
             <Grid item xs={4}>
               <Typography variant="subtitle1">Endgame</Typography>
-              <Typography variant="h6">{Math.round(accuracy.byPhase.endgame)}%</Typography>
+              <Typography variant="h6">
+                {Math.round(accuracy.byPhase.endgame)}%
+              </Typography>
               <LinearProgress
                 variant="determinate"
                 value={accuracy.byPhase.endgame}
@@ -201,23 +283,33 @@ function AccuracySection({ accuracy }: { accuracy: GameInsights['accuracy'] }) {
       {/* Time Control Accuracy */}
       <Grid item xs={12}>
         <Paper sx={{ p: 2 }}>
-          <Typography variant="h6" gutterBottom>Accuracy by Time Control</Typography>
+          <Typography variant="h6" gutterBottom>
+            Accuracy by Time Control
+          </Typography>
           <Grid container spacing={2}>
             <Grid item xs={3}>
               <Typography variant="subtitle1">Bullet</Typography>
-              <Typography variant="h6">{Math.round(accuracy.byTimeControl.bullet)}%</Typography>
+              <Typography variant="h6">
+                {Math.round(accuracy.byTimeControl.bullet)}%
+              </Typography>
             </Grid>
             <Grid item xs={3}>
               <Typography variant="subtitle1">Blitz</Typography>
-              <Typography variant="h6">{Math.round(accuracy.byTimeControl.blitz)}%</Typography>
+              <Typography variant="h6">
+                {Math.round(accuracy.byTimeControl.blitz)}%
+              </Typography>
             </Grid>
             <Grid item xs={3}>
               <Typography variant="subtitle1">Rapid</Typography>
-              <Typography variant="h6">{Math.round(accuracy.byTimeControl.rapid)}%</Typography>
+              <Typography variant="h6">
+                {Math.round(accuracy.byTimeControl.rapid)}%
+              </Typography>
             </Grid>
             <Grid item xs={3}>
               <Typography variant="subtitle1">Classical</Typography>
-              <Typography variant="h6">{Math.round(accuracy.byTimeControl.classical)}%</Typography>
+              <Typography variant="h6">
+                {Math.round(accuracy.byTimeControl.classical)}%
+              </Typography>
             </Grid>
           </Grid>
         </Paper>
@@ -226,7 +318,11 @@ function AccuracySection({ accuracy }: { accuracy: GameInsights['accuracy'] }) {
   );
 }
 
-function CriticalPositionsSection({ positions }: { positions: PositionAnalysis[] }) {
+function CriticalPositionsSection({
+  positions,
+}: {
+  positions: PositionAnalysis[];
+}) {
   if (!positions.length) return null;
 
   return (
@@ -270,7 +366,8 @@ function WeaknessesSection({ weaknesses }: { weaknesses: WeaknessAnalysis[] }) {
         <Grid item xs={12} key={index}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom>
-              {weakness.phase.charAt(0).toUpperCase() + weakness.phase.slice(1)} Phase
+              {weakness.phase.charAt(0).toUpperCase() + weakness.phase.slice(1)}{" "}
+              Phase
             </Typography>
             <Typography variant="body1" gutterBottom>
               {weakness.description}
@@ -302,7 +399,10 @@ function WeaknessesSection({ weaknesses }: { weaknesses: WeaknessAnalysis[] }) {
                         <TableRow key={idx}>
                           <TableCell>{mistake.correctMove}</TableCell>
                           <TableCell>{mistake.playerMove}</TableCell>
-                          <TableCell align="right">{mistake.evalDrop.toFixed(2)}</TableCell>
+                          <TableCell align="right">
+                            {mistake.evalDrop.toFixed(2)}
+                          </TableCell>
+                          
                         </TableRow>
                       ))}
                     </TableBody>
@@ -323,26 +423,28 @@ function TrendsSection({ insights }: { insights: GameInsights }) {
       {/* Accuracy Trend */}
       <Grid item xs={12}>
         <Paper sx={{ p: 2 }}>
-          <Typography variant="h6" gutterBottom>Accuracy Trend</Typography>
-          <Box sx={{ width: '100%', height: 300 }}>
+          <Typography variant="h6" gutterBottom>
+            Accuracy Trend
+          </Typography>
+          <Box sx={{ width: "100%", height: 300 }}>
             <ResponsiveContainer>
               <LineChart data={insights.trends}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="date" 
+                <XAxis
+                  dataKey="date"
                   tickFormatter={(date) => new Date(date).toLocaleDateString()}
                 />
                 <YAxis domain={[0, 100]} />
-                <Tooltip 
+                <Tooltip
                   labelFormatter={(date) => new Date(date).toLocaleDateString()}
                   formatter={(value: number) => [`${value.toFixed(1)}%`]}
                 />
                 <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="accuracy" 
-                  stroke="#8884d8" 
-                  name="Overall Accuracy" 
+                <Line
+                  type="monotone"
+                  dataKey="accuracy"
+                  stroke="#8884d8"
+                  name="Overall Accuracy"
                   strokeWidth={2}
                   dot={false}
                 />
@@ -355,26 +457,28 @@ function TrendsSection({ insights }: { insights: GameInsights }) {
       {/* Win Rate Trend */}
       <Grid item xs={12}>
         <Paper sx={{ p: 2 }}>
-          <Typography variant="h6" gutterBottom>Win Rate Trend</Typography>
-          <Box sx={{ width: '100%', height: 300 }}>
+          <Typography variant="h6" gutterBottom>
+            Win Rate Trend
+          </Typography>
+          <Box sx={{ width: "100%", height: 300 }}>
             <ResponsiveContainer>
               <LineChart data={insights.trends}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="date" 
+                <XAxis
+                  dataKey="date"
                   tickFormatter={(date) => new Date(date).toLocaleDateString()}
                 />
                 <YAxis domain={[0, 100]} />
-                <Tooltip 
+                <Tooltip
                   labelFormatter={(date) => new Date(date).toLocaleDateString()}
                   formatter={(value: number) => [`${value.toFixed(1)}%`]}
                 />
                 <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="winRate" 
-                  stroke="#82ca9d" 
-                  name="Win Rate" 
+                <Line
+                  type="monotone"
+                  dataKey="winRate"
+                  stroke="#82ca9d"
+                  name="Win Rate"
                   strokeWidth={2}
                   dot={false}
                 />
@@ -387,26 +491,28 @@ function TrendsSection({ insights }: { insights: GameInsights }) {
       {/* Opening Performance Trend */}
       <Grid item xs={12}>
         <Paper sx={{ p: 2 }}>
-          <Typography variant="h6" gutterBottom>Opening Performance</Typography>
-          <Box sx={{ width: '100%', height: 300 }}>
+          <Typography variant="h6" gutterBottom>
+            Opening Performance
+          </Typography>
+          <Box sx={{ width: "100%", height: 300 }}>
             <ResponsiveContainer>
               <LineChart data={insights.trends}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="date" 
+                <XAxis
+                  dataKey="date"
                   tickFormatter={(date) => new Date(date).toLocaleDateString()}
                 />
                 <YAxis domain={[0, 100]} />
-                <Tooltip 
+                <Tooltip
                   labelFormatter={(date) => new Date(date).toLocaleDateString()}
                   formatter={(value: number) => [`${value.toFixed(1)}%`]}
                 />
                 <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="openingAccuracy" 
-                  stroke="#ffc658" 
-                  name="Opening Accuracy" 
+                <Line
+                  type="monotone"
+                  dataKey="openingAccuracy"
+                  stroke="#ffc658"
+                  name="Opening Accuracy"
                   strokeWidth={2}
                   dot={false}
                 />
@@ -434,25 +540,28 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
     { id: "openings", label: "Opening Analysis", checked: true },
     { id: "weaknesses", label: "Areas for Improvement", checked: true },
   ]);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadInsights = async () => {
+    if (!userId) return;
+
+    setLoading(true);
+    try {
+      const games = await getUserGames();
+      const importedGames = convertToImportedGameData(games);
+      const generatedInsights = generateGameInsights(userId, importedGames);
+      setInsights(generatedInsights);
+    } catch (error) {
+      console.error("Error loading insights:", error);
+      setError("Failed to load game insights");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadInsights = async () => {
-      if (!open) return;
-      
-      setLoading(true);
-      try {
-        const games = await getUserGames(userId);
-        const generatedInsights = generateGameInsights(userId, games);
-        setInsights(generatedInsights);
-      } catch (error) {
-        console.error('Error generating insights:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadInsights();
-  }, [open, userId]);
+  }, [userId, getUserGames, loadInsights]);
 
   const handleExport = useCallback(() => {
     setTriggerDownload(true);
@@ -486,7 +595,7 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
 
   const formatPercentage = (value: number) => `${Math.round(value)}%`;
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
@@ -497,7 +606,7 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
       <DialogTitle>
         Game Insights
         {insights && (
-          <Box sx={{ position: 'absolute', right: 16, top: 8 }}>
+          <Box sx={{ position: "absolute", right: 16, top: 8 }}>
             <Button
               variant="contained"
               color="primary"
@@ -514,9 +623,13 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
           <Box display="flex" justifyContent="center" p={4}>
             <CircularProgress />
           </Box>
+        ) : error ? (
+          <Box display="flex" justifyContent="center" p={4}>
+            <Typography color="error">{error}</Typography>
+          </Box>
         ) : insights ? (
           <>
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
               <Tabs value={tabValue} onChange={handleTabChange}>
                 <Tab label="Overview" />
                 <Tab label="Openings" />
@@ -541,11 +654,18 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
                 <Grid item xs={12} md={6}>
                   <Paper sx={{ p: 2 }}>
                     <Typography variant="h6">Performance as White</Typography>
-                    <Typography>Wins: {insights.winLossRatio.white.wins}</Typography>
-                    <Typography>Losses: {insights.winLossRatio.white.losses}</Typography>
-                    <Typography>Draws: {insights.winLossRatio.white.draws}</Typography>
                     <Typography>
-                      Win Rate: {formatPercentage(insights.winLossRatio.white.winRate)}
+                      Wins: {insights.winLossRatio.white.wins}
+                    </Typography>
+                    <Typography>
+                      Losses: {insights.winLossRatio.white.losses}
+                    </Typography>
+                    <Typography>
+                      Draws: {insights.winLossRatio.white.draws}
+                    </Typography>
+                    <Typography>
+                      Win Rate:{" "}
+                      {formatPercentage(insights.winLossRatio.white.winRate)}
                     </Typography>
                   </Paper>
                 </Grid>
@@ -553,11 +673,18 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
                 <Grid item xs={12} md={6}>
                   <Paper sx={{ p: 2 }}>
                     <Typography variant="h6">Performance as Black</Typography>
-                    <Typography>Wins: {insights.winLossRatio.black.wins}</Typography>
-                    <Typography>Losses: {insights.winLossRatio.black.losses}</Typography>
-                    <Typography>Draws: {insights.winLossRatio.black.draws}</Typography>
                     <Typography>
-                      Win Rate: {formatPercentage(insights.winLossRatio.black.winRate)}
+                      Wins: {insights.winLossRatio.black.wins}
+                    </Typography>
+                    <Typography>
+                      Losses: {insights.winLossRatio.black.losses}
+                    </Typography>
+                    <Typography>
+                      Draws: {insights.winLossRatio.black.draws}
+                    </Typography>
+                    <Typography>
+                      Win Rate:{" "}
+                      {formatPercentage(insights.winLossRatio.black.winRate)}
                     </Typography>
                   </Paper>
                 </Grid>
@@ -568,16 +695,24 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
                     <Typography variant="h6">Time Controls</Typography>
                     <Grid container spacing={2}>
                       <Grid item xs={3}>
-                        <Typography>Bullet: {insights.timeControls.bullet}</Typography>
+                        <Typography>
+                          Bullet: {insights.timeControls.bullet}
+                        </Typography>
                       </Grid>
                       <Grid item xs={3}>
-                        <Typography>Blitz: {insights.timeControls.blitz}</Typography>
+                        <Typography>
+                          Blitz: {insights.timeControls.blitz}
+                        </Typography>
                       </Grid>
                       <Grid item xs={3}>
-                        <Typography>Rapid: {insights.timeControls.rapid}</Typography>
+                        <Typography>
+                          Rapid: {insights.timeControls.rapid}
+                        </Typography>
                       </Grid>
                       <Grid item xs={3}>
-                        <Typography>Classical: {insights.timeControls.classical}</Typography>
+                        <Typography>
+                          Classical: {insights.timeControls.classical}
+                        </Typography>
                       </Grid>
                     </Grid>
                   </Paper>
@@ -587,7 +722,9 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
                 <Grid item xs={12}>
                   <Paper sx={{ p: 2 }}>
                     <Typography variant="h6">Average Game Length</Typography>
-                    <Typography variant="h4">{insights.averageGameLength} moves</Typography>
+                    <Typography variant="h4">
+                      {insights.averageGameLength} moves
+                    </Typography>
                   </Paper>
                 </Grid>
               </Grid>
@@ -597,7 +734,7 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
               <Grid container spacing={3}>
                 {/* Most Played Openings */}
                 <Grid item xs={12}>
-                  <OpeningStatsTable 
+                  <OpeningStatsTable
                     stats={insights.openings.mostPlayed}
                     title="Most Played Openings"
                   />
@@ -605,7 +742,7 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
 
                 {/* Best Performing Openings */}
                 <Grid item xs={12}>
-                  <OpeningStatsTable 
+                  <OpeningStatsTable
                     stats={insights.openings.bestPerformance}
                     title="Best Performing Openings (min. 3 games)"
                   />
@@ -613,7 +750,7 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
 
                 {/* Worst Performing Openings */}
                 <Grid item xs={12}>
-                  <OpeningStatsTable 
+                  <OpeningStatsTable
                     stats={insights.openings.worstPerformance}
                     title="Openings to Improve (min. 3 games)"
                   />
@@ -621,7 +758,7 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
 
                 {/* White Openings */}
                 <Grid item xs={12} md={6}>
-                  <OpeningStatsTable 
+                  <OpeningStatsTable
                     stats={insights.openings.asWhite}
                     title="Most Played as White"
                   />
@@ -629,7 +766,7 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
 
                 {/* Black Openings */}
                 <Grid item xs={12} md={6}>
-                  <OpeningStatsTable 
+                  <OpeningStatsTable
                     stats={insights.openings.asBlack}
                     title="Most Played as Black"
                   />
@@ -642,17 +779,25 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
             </TabPanel>
 
             <TabPanel value={tabValue} index={3}>
-              <Typography variant="h6" gutterBottom>Critical Positions</Typography>
-              <CriticalPositionsSection positions={insights.criticalPositions} />
+              <Typography variant="h6" gutterBottom>
+                Critical Positions
+              </Typography>
+              <CriticalPositionsSection
+                positions={insights.criticalPositions}
+              />
             </TabPanel>
 
             <TabPanel value={tabValue} index={4}>
-              <Typography variant="h6" gutterBottom>Areas for Improvement</Typography>
+              <Typography variant="h6" gutterBottom>
+                Areas for Improvement
+              </Typography>
               <WeaknessesSection weaknesses={insights.weaknesses} />
             </TabPanel>
 
             <TabPanel value={tabValue} index={5}>
-              <Typography variant="h6" gutterBottom>Performance Trends</Typography>
+              <Typography variant="h6" gutterBottom>
+                Performance Trends
+              </Typography>
               <TrendsSection insights={insights} />
             </TabPanel>
           </>
@@ -678,17 +823,17 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
             document={generateInsightsPDF(insights, selectedSections)}
             fileName="chess-insights.pdf"
           >
-            {({ blob, url, loading, error }) => {
+            {({ url, loading, error }) => {
               if (error) {
                 console.error("PDF generation error:", error);
                 setTriggerDownload(false);
                 return null;
               }
-              
+
               if (!loading && url) {
                 return (
-                  <a 
-                    href={url} 
+                  <a
+                    href={url}
                     ref={downloadLinkRef}
                     download="chess-insights.pdf"
                   >
@@ -696,7 +841,7 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
                   </a>
                 );
               }
-              
+
               return null;
             }}
           </PDFDownloadLink>
@@ -704,4 +849,4 @@ export default function GameInsightsDialog({ open, onClose, userId }: Props) {
       )}
     </Dialog>
   );
-} 
+}

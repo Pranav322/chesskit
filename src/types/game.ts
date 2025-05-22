@@ -3,6 +3,7 @@ import { GameOrigin } from "./enums";
 
 export interface Game {
   id: number;
+  userId: string;
   pgn: string;
   event?: string;
   site?: string;

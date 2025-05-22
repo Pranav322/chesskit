@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
-import { GameOrigin } from '@/types/enums';
-import { GameImportOptions } from '@/types/importedGame';
-import { Icon } from '@iconify/react';
+import React, { useState } from "react";
+import { GameOrigin } from "@/types/enums";
+import { GameImportOptions } from "@/types/importedGame";
+import { Icon } from "@iconify/react";
 import {
   Box,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
   Typography,
@@ -14,7 +13,7 @@ import {
   FormControlLabel,
   Checkbox,
   SelectChangeEvent,
-} from '@mui/material';
+} from "@mui/material";
 
 const gameCountOptions = [50, 100, 200, 500] as const;
 
@@ -22,13 +21,13 @@ const platformOptions = [
   {
     value: GameOrigin.Lichess,
     label: "Lichess",
-    icon: "simple-icons:lichess"
+    icon: "simple-icons:lichess",
   },
   {
     value: GameOrigin.ChessCom,
     label: "Chess.com",
-    icon: "simple-icons:chess-dot-com"
-  }
+    icon: "simple-icons:chess-dot-com",
+  },
 ];
 
 export const GameImportForm: React.FC<{
@@ -36,7 +35,7 @@ export const GameImportForm: React.FC<{
   isLoading?: boolean;
 }> = ({ onSubmit, isLoading }) => {
   const [platform, setPlatform] = useState<GameOrigin>(GameOrigin.Lichess);
-  const [count, setCount] = useState<typeof gameCountOptions[number]>(100);
+  const [count, setCount] = useState<(typeof gameCountOptions)[number]>(100);
   const [autoTag, setAutoTag] = useState(true);
   const [backgroundImport, setBackgroundImport] = useState(true);
 
@@ -55,7 +54,11 @@ export const GameImportForm: React.FC<{
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+    <Box
+      component="form"
+      onSubmit={handleSubmit}
+      sx={{ display: "flex", flexDirection: "column", gap: 3 }}
+    >
       <Box>
         <Typography variant="subtitle2" sx={{ mb: 1 }}>
           Select Chess Platform
@@ -70,31 +73,31 @@ export const GameImportForm: React.FC<{
                 display: "flex",
                 alignItems: "center",
                 gap: 2,
-                py: 1.5
-              }
+                py: 1.5,
+              },
             }}
           >
             {platformOptions.map((option) => (
-              <MenuItem 
-                key={option.value} 
+              <MenuItem
+                key={option.value}
                 value={option.value}
                 sx={{
                   display: "flex",
                   alignItems: "center",
                   gap: 2,
-                  py: 1.5
+                  py: 1.5,
                 }}
               >
-                <Icon 
-                  icon={option.icon} 
-                  style={{ 
+                <Icon
+                  icon={option.icon}
+                  style={{
                     fontSize: "32px",
                     width: "32px",
                     height: "32px",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center"
-                  }} 
+                    justifyContent: "center",
+                  }}
                 />
                 {option.label}
               </MenuItem>
@@ -110,7 +113,11 @@ export const GameImportForm: React.FC<{
         <FormControl fullWidth>
           <Select
             value={count.toString()}
-            onChange={(e) => setCount(Number(e.target.value))}
+            onChange={(e) =>
+              setCount(
+                Number(e.target.value) as (typeof gameCountOptions)[number],
+              )
+            }
             disabled={isLoading}
           >
             {gameCountOptions.map((option) => (
@@ -152,11 +159,17 @@ export const GameImportForm: React.FC<{
         type="submit"
         variant="contained"
         disabled={isLoading}
-        startIcon={isLoading ? <CircularProgress size={20} /> : <Icon icon="mdi:cloud-download" />}
+        startIcon={
+          isLoading ? (
+            <CircularProgress size={20} />
+          ) : (
+            <Icon icon="mdi:cloud-download" />
+          )
+        }
         sx={{ py: 1.5 }}
       >
         {isLoading ? "Importing Games..." : "Import Games"}
       </Button>
     </Box>
   );
-}; 
+};

@@ -1,5 +1,5 @@
-import { GameOrigin } from './enums';
-import { Timestamp } from 'firebase/firestore';
+import { GameOrigin } from "./enums";
+import { Timestamp } from "firebase/firestore";
 
 export interface ImportedGameData {
   id: string;
@@ -42,7 +42,7 @@ export interface ImportProgressData {
   id: string;
   userId: string;
   source: GameOrigin;
-  status: 'importing' | 'completed' | 'failed';
+  status: "importing" | "completed" | "failed";
   totalGames: number;
   completedGames: number;
   failedGames: number;

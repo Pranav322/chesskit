@@ -42,11 +42,11 @@ interface Props {
 export default function GameSettingsDialog({ open, onClose }: Props) {
   const [engineElo, setEngineElo] = useAtomLocalStorage(
     "engine-elo",
-    engineEloAtom
+    engineEloAtom,
   );
   const [engineName, setEngineName] = useAtomLocalStorage(
     "engine-play-name",
-    enginePlayNameAtom
+    enginePlayNameAtom,
   );
   const [playerColor, setPlayerColor] = useAtom(playerColorAtom);
   const setIsGameInProgress = useSetAtom(isGameInProgressAtom);
@@ -150,7 +150,7 @@ export default function GameSettingsDialog({ open, onClose }: Props) {
                   checked={playerColor === Color.White}
                   onChange={(e) => {
                     setPlayerColor(
-                      e.target.checked ? Color.White : Color.Black
+                      e.target.checked ? Color.White : Color.Black,
                     );
                   }}
                 />

@@ -32,7 +32,7 @@ export default function LineEvaluation({ line }: Props) {
 
   const formatSan = (
     san: string,
-    moveIdx: number
+    moveIdx: number,
   ): { icon?: string; text: string } => {
     const firstChar = san.charAt(0);
 

@@ -1,11 +1,11 @@
-import { Chess } from 'chess.js';
-import { ImportedGameData } from '@/types/database';
-import { Timestamp } from 'firebase/firestore';
+import { Chess } from "chess.js";
+import { ImportedGameData } from "@/types/database";
+import { Timestamp } from "firebase/firestore";
 
 export interface DuplicateCheckResult {
   isDuplicate: boolean;
   existingGameId?: string;
-  matchReason?: 'exact' | 'similar';
+  matchReason?: "exact" | "similar";
   similarityScore?: number;
 }
 
@@ -24,14 +24,14 @@ export interface GameSignature {
 export const getGameSignature = (game: ImportedGameData): GameSignature => {
   const chess = new Chess();
   chess.loadPgn(game.pgn);
-  
+
   return {
     date: game.metadata.date,
     whitePlayer: game.metadata.white.name,
     blackPlayer: game.metadata.black.name,
     firstMoves: chess.history().slice(0, 10), // First 10 moves for comparison
     timeControl: game.metadata.timeControl,
-    result: game.metadata.result
+    result: game.metadata.result,
   };
 };
 
@@ -39,13 +39,19 @@ export const getGameSignature = (game: ImportedGameData): GameSignature => {
  * Calculates similarity score between two games
  * Returns a value between 0 (completely different) and 1 (identical)
  */
-export const calculateGameSimilarity = (sig1: GameSignature, sig2: GameSignature): number => {
+export const calculateGameSimilarity = (
+  sig1: GameSignature,
+  sig2: GameSignature,
+): number => {
   let score = 0;
   let totalWeight = 0;
 
   // Compare players (highest weight)
   const playerWeight = 0.4;
-  if (sig1.whitePlayer === sig2.whitePlayer && sig1.blackPlayer === sig2.blackPlayer) {
+  if (
+    sig1.whitePlayer === sig2.whitePlayer &&
+    sig1.blackPlayer === sig2.blackPlayer
+  ) {
     score += playerWeight;
   }
   totalWeight += playerWeight;
@@ -53,9 +59,11 @@ export const calculateGameSimilarity = (sig1: GameSignature, sig2: GameSignature
   // Compare date (medium weight)
   const dateWeight = 0.2;
   const dateDiff = Math.abs(sig1.date.seconds - sig2.date.seconds);
-  if (dateDiff < 60 * 60) { // Within an hour
+  if (dateDiff < 60 * 60) {
+    // Within an hour
     score += dateWeight;
-  } else if (dateDiff < 60 * 60 * 24) { // Within a day
+  } else if (dateDiff < 60 * 60 * 24) {
+    // Within a day
     score += dateWeight * 0.5;
   }
   totalWeight += dateWeight;
@@ -71,7 +79,9 @@ export const calculateGameSimilarity = (sig1: GameSignature, sig2: GameSignature
       break; // Stop at first mismatch
     }
   }
-  score += (movesWeight * matchingMoves) / Math.max(sig1.firstMoves.length, sig2.firstMoves.length);
+  score +=
+    (movesWeight * matchingMoves) /
+    Math.max(sig1.firstMoves.length, sig2.firstMoves.length);
   totalWeight += movesWeight;
 
   // Compare time control (low weight)
@@ -89,7 +99,7 @@ export const calculateGameSimilarity = (sig1: GameSignature, sig2: GameSignature
  */
 export const checkForDuplicate = (
   newGame: ImportedGameData,
-  existingGames: ImportedGameData[]
+  existingGames: ImportedGameData[],
 ): DuplicateCheckResult => {
   const newSignature = getGameSignature(newGame);
   let highestSimilarity = 0;
@@ -109,8 +119,8 @@ export const checkForDuplicate = (
       return {
         isDuplicate: true,
         existingGameId: existingGame.id,
-        matchReason: 'exact',
-        similarityScore: 1
+        matchReason: "exact",
+        similarityScore: 1,
       };
     }
   }
@@ -120,13 +130,13 @@ export const checkForDuplicate = (
     return {
       isDuplicate: true,
       existingGameId: mostSimilarGame.id,
-      matchReason: 'similar',
-      similarityScore: highestSimilarity
+      matchReason: "similar",
+      similarityScore: highestSimilarity,
     };
   }
 
   return {
     isDuplicate: false,
-    similarityScore: highestSimilarity
+    similarityScore: highestSimilarity,
   };
-}; 
+};

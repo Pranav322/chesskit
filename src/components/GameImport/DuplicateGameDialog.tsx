@@ -47,7 +47,10 @@ export const DuplicateGameDialog: React.FC<DuplicateGameDialogProps> = ({
     >
       <DialogTitle sx={{ pb: 1 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Icon icon="mdi:content-copy" style={{ color: "warning.main", fontSize: "1.5rem" }} />
+          <Icon
+            icon="mdi:content-copy"
+            style={{ color: "warning.main", fontSize: "1.5rem" }}
+          />
           Duplicate Game Found
         </Box>
       </DialogTitle>
@@ -94,4 +97,4 @@ export const DuplicateGameDialog: React.FC<DuplicateGameDialogProps> = ({
       </DialogActions>
     </Dialog>
   );
-}; 
+};

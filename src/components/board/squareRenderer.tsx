@@ -76,7 +76,7 @@ export function getSquareRenderer({
           )}
         </div>
       );
-    }
+    },
   );
 
   squareRenderer.displayName = "SquareRenderer";
@@ -104,7 +104,7 @@ const playableSquareStyles: CSSProperties = {
 };
 
 const previousMoveSquareStyle = (
-  moveClassification?: MoveClassification
+  moveClassification?: MoveClassification,
 ): CSSProperties => ({
   position: "absolute",
   width: "100%",

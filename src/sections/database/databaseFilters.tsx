@@ -1,3 +1,4 @@
+import React from "react";
 import {
   FormControl,
   Grid2 as Grid,
@@ -14,7 +15,7 @@ import {
 import { GameOrigin, Color } from "@/types/enums";
 import { atom, useAtom } from "jotai";
 import { useGameDatabase } from "@/hooks/useGameDatabase";
-import { Folder } from "@/types/folder";
+
 
 // Filter atoms
 export const platformFilterAtom = atom<GameOrigin | "all">("all");
@@ -40,7 +41,7 @@ export default function DatabaseFilters() {
   const [colorFilter, setColorFilter] = useAtom(colorFilterAtom);
   const [openingFilter, setOpeningFilter] = useAtom(openingFilterAtom);
   const [showFavoritesOnly, setShowFavoritesOnly] = useAtom(
-    showFavoritesOnlyAtom
+    showFavoritesOnlyAtom,
   );
   const [eloRange, setEloRange] = useAtom(eloRangeFilterAtom);
   const [customTagFilter, setCustomTagFilter] = useAtom(customTagFilterAtom);
@@ -67,18 +68,20 @@ export default function DatabaseFilters() {
   };
 
   const handleCustomTagChange = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     setCustomTagFilter(event.target.value);
   };
 
   const handleFolderChange = (event: SelectChangeEvent) => {
-    setFolderFilter(event.target.value === "all" ? "all" : Number(event.target.value));
+    setFolderFilter(
+      event.target.value === "all" ? "all" : Number(event.target.value),
+    );
   };
 
   return (
     <Grid container spacing={2} alignItems="center">
-      <Grid xs={2}>
+      <Grid component="div" xs={2}>
         <FormControlLabel
           control={
             <Switch
@@ -91,7 +94,7 @@ export default function DatabaseFilters() {
         />
       </Grid>
 
-      <Grid xs={2}>
+      <Grid component="div" xs={2}>
         <FormControl fullWidth size="small">
           <InputLabel>Folder</InputLabel>
           <Select
@@ -109,7 +112,7 @@ export default function DatabaseFilters() {
         </FormControl>
       </Grid>
 
-      <Grid xs={2}>
+      <Grid component="div" xs={2}>
         <FormControl fullWidth size="small">
           <InputLabel>Platform</InputLabel>
           <Select
@@ -125,7 +128,7 @@ export default function DatabaseFilters() {
         </FormControl>
       </Grid>
 
-      <Grid xs={2}>
+      <Grid component="div" xs={2}>
         <FormControl fullWidth size="small">
           <InputLabel>Result</InputLabel>
           <Select
@@ -142,7 +145,7 @@ export default function DatabaseFilters() {
         </FormControl>
       </Grid>
 
-      <Grid xs={2}>
+      <Grid component="div" xs={2}>
         <FormControl fullWidth size="small">
           <InputLabel>Color</InputLabel>
           <Select
@@ -157,7 +160,7 @@ export default function DatabaseFilters() {
         </FormControl>
       </Grid>
 
-      <Grid xs={2}>
+      <Grid component="div" xs={2}>
         <TextField
           fullWidth
           size="small"
@@ -168,9 +171,13 @@ export default function DatabaseFilters() {
         />
       </Grid>
 
-      <Grid xs={12} sx={{ px: 4, mt: 2 }}>
+      <Grid component="div" xs={12} sx={{ px: 4, mt: 2 }}>
         <FormControl fullWidth>
-          <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: "medium" }}>
+          <Typography
+            variant="subtitle1"
+            gutterBottom
+            sx={{ fontWeight: "medium" }}
+          >
             ELO Range: {eloRange[0]} - {eloRange[1]}
           </Typography>
           <Slider
@@ -210,7 +217,7 @@ export default function DatabaseFilters() {
         </FormControl>
       </Grid>
 
-      <Grid xs={12}>
+      <Grid component="div" xs={12}>
         <TextField
           fullWidth
           size="small"
@@ -222,4 +229,4 @@ export default function DatabaseFilters() {
       </Grid>
     </Grid>
   );
-} 
+}

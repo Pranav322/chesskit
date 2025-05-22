@@ -10,7 +10,7 @@ import { getIsPieceSacrifice, isSimplePieceRecapture } from "@/lib/chess";
 export const getMovesClassification = (
   rawPositions: PositionEval[],
   uciMoves: string[],
-  fens: string[]
+  fens: string[],
 ): PositionEval[] => {
   const positionsWinPercentage = rawPositions.map(getPositionWinPercentage);
   let currentOpening: string = "Unknown opening";
@@ -61,7 +61,7 @@ export const getMovesClassification = (
         playedMove,
         bestLinePvToPlay,
         fens[index - 1],
-        lastPositionAlternativeLineWinPercentage
+        lastPositionAlternativeLineWinPercentage,
       )
     ) {
       return {
@@ -82,7 +82,7 @@ export const getMovesClassification = (
         isWhiteMove,
         lastPositionAlternativeLineWinPercentage,
         fenTwoMovesAgo,
-        uciNextTwoMoves
+        uciNextTwoMoves,
       )
     ) {
       return {
@@ -103,7 +103,7 @@ export const getMovesClassification = (
     const moveClassification = getMoveBasicClassification(
       lastPositionWinPercentage,
       positionWinPercentage,
-      isWhiteMove
+      isWhiteMove,
     );
 
     return {
@@ -119,7 +119,7 @@ export const getMovesClassification = (
 const getMoveBasicClassification = (
   lastPositionWinPercentage: number,
   positionWinPercentage: number,
-  isWhiteMove: boolean
+  isWhiteMove: boolean,
 ): MoveClassification => {
   const winPercentageDiff =
     (positionWinPercentage - lastPositionWinPercentage) *
@@ -139,7 +139,7 @@ const isBrilliantMove = (
   playedMove: string,
   bestLinePvToPlay: string[],
   fen: string,
-  lastPositionAlternativeLineWinPercentage: number | undefined
+  lastPositionAlternativeLineWinPercentage: number | undefined,
 ): boolean => {
   if (!lastPositionAlternativeLineWinPercentage) return false;
 
@@ -151,7 +151,7 @@ const isBrilliantMove = (
   const isPieceSacrifice = getIsPieceSacrifice(
     fen,
     playedMove,
-    bestLinePvToPlay
+    bestLinePvToPlay,
   );
   if (!isPieceSacrifice) return false;
 
@@ -159,7 +159,7 @@ const isBrilliantMove = (
     isLosingOrAlternateCompletelyWinning(
       positionWinPercentage,
       lastPositionAlternativeLineWinPercentage,
-      isWhiteMove
+      isWhiteMove,
     )
   ) {
     return false;
@@ -171,7 +171,7 @@ const isBrilliantMove = (
 const isLosingOrAlternateCompletelyWinning = (
   positionWinPercentage: number,
   lastPositionAlternativeLineWinPercentage: number,
-  isWhiteMove: boolean
+  isWhiteMove: boolean,
 ): boolean => {
   const isLosing = isWhiteMove
     ? positionWinPercentage < 50
@@ -189,7 +189,7 @@ const isGreatMove = (
   isWhiteMove: boolean,
   lastPositionAlternativeLineWinPercentage: number | undefined,
   fenTwoMovesAgo: string | null,
-  uciMoves: [string, string] | null
+  uciMoves: [string, string] | null,
 ): boolean => {
   if (!lastPositionAlternativeLineWinPercentage) return false;
 
@@ -209,7 +209,7 @@ const isGreatMove = (
     isLosingOrAlternateCompletelyWinning(
       positionWinPercentage,
       lastPositionAlternativeLineWinPercentage,
-      isWhiteMove
+      isWhiteMove,
     )
   ) {
     return false;
@@ -218,13 +218,13 @@ const isGreatMove = (
   const hasChangedGameOutcome = getHasChangedGameOutcome(
     lastPositionWinPercentage,
     positionWinPercentage,
-    isWhiteMove
+    isWhiteMove,
   );
 
   const isTheOnlyGoodMove = getIsTheOnlyGoodMove(
     positionWinPercentage,
     lastPositionAlternativeLineWinPercentage,
-    isWhiteMove
+    isWhiteMove,
   );
 
   return hasChangedGameOutcome || isTheOnlyGoodMove;
@@ -233,7 +233,7 @@ const isGreatMove = (
 const getHasChangedGameOutcome = (
   lastPositionWinPercentage: number,
   positionWinPercentage: number,
-  isWhiteMove: boolean
+  isWhiteMove: boolean,
 ): boolean => {
   const winPercentageDiff =
     (positionWinPercentage - lastPositionWinPercentage) *
@@ -248,7 +248,7 @@ const getHasChangedGameOutcome = (
 const getIsTheOnlyGoodMove = (
   positionWinPercentage: number,
   lastPositionAlternativeLineWinPercentage: number,
-  isWhiteMove: boolean
+  isWhiteMove: boolean,
 ): boolean => {
   const winPercentageDiff =
     (positionWinPercentage - lastPositionAlternativeLineWinPercentage) *

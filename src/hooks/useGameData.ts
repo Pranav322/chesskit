@@ -5,7 +5,7 @@ import { useEffect } from "react";
 
 export const useGameData = (
   gameAtom: PrimitiveAtom<Chess>,
-  gameDataAtom: PrimitiveAtom<CurrentPosition>
+  gameDataAtom: PrimitiveAtom<CurrentPosition>,
 ) => {
   const game = useAtomValue(gameAtom);
   const [gameData, setGameData] = useAtom(gameDataAtom);

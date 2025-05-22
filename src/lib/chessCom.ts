@@ -2,7 +2,7 @@ import { ChessComGame } from "@/types/chessCom";
 import { getPaddedNumber } from "./helpers";
 
 export const getChessComUserRecentGames = async (
-  username: string
+  username: string,
 ): Promise<ChessComGame[]> => {
   const date = new Date();
   const year = date.getUTCFullYear();
@@ -10,7 +10,7 @@ export const getChessComUserRecentGames = async (
   const paddedMonth = getPaddedNumber(month);
 
   const res = await fetch(
-    `https://api.chess.com/pub/player/${username}/games/${year}/${paddedMonth}`
+    `https://api.chess.com/pub/player/${username}/games/${year}/${paddedMonth}`,
   );
 
   if (res.status === 404) return [];
@@ -25,7 +25,7 @@ export const getChessComUserRecentGames = async (
     const yearToFetch = previousMonth === 12 ? year - 1 : year;
 
     const resPreviousMonth = await fetch(
-      `https://api.chess.com/pub/player/${username}/games/${yearToFetch}/${previousPaddedMonth}`
+      `https://api.chess.com/pub/player/${username}/games/${yearToFetch}/${previousPaddedMonth}`,
     );
 
     const dataPreviousMonth = await resPreviousMonth.json();
@@ -41,7 +41,7 @@ export const getChessComUserRecentGames = async (
 };
 
 export const getChessComUserAvatar = async (
-  username: string
+  username: string,
 ): Promise<string | null> => {
   const usernameParam = encodeURIComponent(username.trim().toLowerCase());
 

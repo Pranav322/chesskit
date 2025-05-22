@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 
 const LinearProgressBar = (
-  props: LinearProgressProps & { value: number; label: string }
+  props: LinearProgressProps & { value: number; label: string },
 ) => {
   if (props.value === 0) return null;
 
@@ -47,7 +47,7 @@ const LinearProgressBar = (
         </Grid>
         <Grid>
           <Typography variant="body2" color="text.secondary">{`${Math.round(
-            props.value
+            props.value,
           )}%`}</Typography>
         </Grid>
       </Grid>

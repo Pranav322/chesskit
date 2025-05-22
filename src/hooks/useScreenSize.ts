@@ -11,7 +11,7 @@ export const useScreenSize = () => {
     if (!mainDiv) return;
 
     const observer = new ResizeObserver(() =>
-      setScreenSize((prev) => ({ ...prev, width: mainDiv.clientWidth }))
+      setScreenSize((prev) => ({ ...prev, width: mainDiv.clientWidth })),
     );
     observer.observe(mainDiv);
 

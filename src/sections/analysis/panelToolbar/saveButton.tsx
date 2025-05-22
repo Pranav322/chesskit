@@ -21,7 +21,9 @@ export default function SaveButton() {
   const handleSave = async () => {
     if (!enableSave) return;
 
-    const gameToSave = getGameToSave(game, board, { currentUser: user?.displayName || undefined });
+    const gameToSave = getGameToSave(game, board, {
+      currentUser: user?.displayName || undefined,
+    });
 
     const gameId = await addGame(gameToSave);
     if (gameEval) {
@@ -34,7 +36,7 @@ export default function SaveButton() {
         pathname: router.pathname,
       },
       undefined,
-      { shallow: true, scroll: false }
+      { shallow: true, scroll: false },
     );
   };
 

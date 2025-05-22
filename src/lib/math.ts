@@ -13,7 +13,7 @@ export const getStandardDeviation = (array: number[]) => {
   const n = array.length;
   const mean = array.reduce((a, b) => a + b) / n;
   return Math.sqrt(
-    array.map((x) => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n
+    array.map((x) => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n,
   );
 };
 
@@ -23,7 +23,7 @@ export const getWeightedMean = (array: number[], weights: number[]) => {
 
   const weightedSum = array.reduce(
     (acc, curr, index) => acc + curr * weights[index],
-    0
+    0,
   );
   const weightSum = weights
     .slice(0, array.length)

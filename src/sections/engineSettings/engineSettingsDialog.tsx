@@ -41,15 +41,15 @@ interface Props {
 export default function EngineSettingsDialog({ open, onClose }: Props) {
   const [depth, setDepth] = useAtomLocalStorage(
     "engine-depth",
-    engineDepthAtom
+    engineDepthAtom,
   );
   const [multiPv, setMultiPv] = useAtomLocalStorage(
     "engine-multi-pv",
-    engineMultiPvAtom
+    engineMultiPvAtom,
   );
   const [engineName, setEngineName] = useAtomLocalStorage(
     "engine-name",
-    engineNameAtom
+    engineNameAtom,
   );
   const [boardHue, setBoardHue] = useAtom(boardHueAtom);
   const [pieceSet, setPieceSet] = useAtom(pieceSetAtom);

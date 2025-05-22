@@ -23,7 +23,7 @@ export default function AnalyzeButton() {
   const engineName = useAtomValue(engineNameAtom);
   const engine = useEngine(engineName);
   const [evaluationProgress, setEvaluationProgress] = useAtom(
-    evaluationProgressAtom
+    evaluationProgressAtom,
   );
   const engineDepth = useAtomValue(engineDepthAtom);
   const engineMultiPv = useAtomValue(engineMultiPvAtom);

@@ -4,7 +4,7 @@ type SetValue<T> = Dispatch<SetStateAction<T>>;
 
 export function useLocalStorage<T = string | number | boolean>(
   key: string,
-  initialValue: T
+  initialValue: T,
 ): [T | null, SetValue<T>] {
   const [storedValue, setStoredValue] = useState<T | null>(null);
 

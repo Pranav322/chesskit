@@ -49,7 +49,7 @@ export default function NavMenu({ open, onClose }: Props) {
   };
 
   const filteredMenuOptions = MenuOptions.filter(
-    option => !option.requiresAuth || user
+    (option) => !option.requiresAuth || user,
   );
 
   return (

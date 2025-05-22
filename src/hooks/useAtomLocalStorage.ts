@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 export function useAtomLocalStorage<T>(
   key: string,
-  atom: PrimitiveAtom<T>
+  atom: PrimitiveAtom<T>,
 ): [T, (value: SetStateAction<T>) => void] {
   const [keyTemp, setKeyTemp] = useState("");
   const [storedValue, setStoredValue] = useAtom(atom);

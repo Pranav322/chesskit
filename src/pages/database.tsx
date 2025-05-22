@@ -1,4 +1,15 @@
-import { Grid2 as Grid, Typography, Box, IconButton, Tooltip, Chip, Snackbar, Menu, MenuItem } from "@mui/material";
+import React from "react"
+import {
+  Grid2 as Grid,
+  Typography,
+  Box,
+  IconButton,
+  Tooltip,
+  Chip,
+  Snackbar,
+  Menu,
+  MenuItem,
+} from "@mui/material";
 import { Icon } from "@iconify/react";
 import {
   DataGrid,
@@ -10,7 +21,7 @@ import {
   GridRowSelectionModel,
 } from "@mui/x-data-grid";
 import { useCallback, useMemo, useState, useEffect } from "react";
-import { blue, red, yellow } from "@mui/material/colors";
+import { yellow } from "@mui/material/colors";
 import LoadGameButton from "@/sections/loadGame/loadGameButton";
 import { useGameDatabase } from "@/hooks/useGameDatabase";
 import { useRouter } from "next/router";
@@ -44,7 +55,8 @@ const gridLocaleText: GridLocaleText = {
 };
 
 export default function GameDatabase() {
-  const { games, deleteGame, updateGame, moveGamesToFolder, getFolderGames } = useGameDatabase(true);
+  const { games, deleteGame, updateGame, moveGamesToFolder, getFolderGames } =
+    useGameDatabase(true);
   const router = useRouter();
   const [showFavoritesOnly] = useAtom(showFavoritesOnlyAtom);
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
@@ -54,7 +66,9 @@ export default function GameDatabase() {
   const [filteredGames, setFilteredGames] = useState<Game[]>([]);
   const [showExportSuccess, setShowExportSuccess] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedExportGame, setSelectedExportGame] = useState<Game | null>(null);
+  const [selectedExportGame, setSelectedExportGame] = useState<Game | null>(
+    null,
+  );
 
   // Get filter values
   const platformFilter = useAtomValue(platformFilterAtom);
@@ -69,11 +83,11 @@ export default function GameDatabase() {
   useEffect(() => {
     const filterGames = async () => {
       let gamesInFolder = games;
-      
+
       // Apply folder filter first
       if (folderFilter !== "all") {
         const folderGameIds = await getFolderGames(folderFilter);
-        gamesInFolder = games.filter(game => folderGameIds.includes(game.id));
+        gamesInFolder = games.filter((game) => folderGameIds.includes(game.id));
       }
 
       const filtered = gamesInFolder.filter((game) => {
@@ -83,7 +97,10 @@ export default function GameDatabase() {
         }
 
         // Platform filter
-        if (platformFilter !== "all" && game.metadata?.platform !== platformFilter) {
+        if (
+          platformFilter !== "all" &&
+          game.metadata?.platform !== platformFilter
+        ) {
           return false;
         }
 
@@ -107,7 +124,10 @@ export default function GameDatabase() {
         }
 
         // Opening filter
-        if (openingFilter && !game.event?.toLowerCase().includes(openingFilter.toLowerCase())) {
+        if (
+          openingFilter &&
+          !game.event?.toLowerCase().includes(openingFilter.toLowerCase())
+        ) {
           return false;
         }
 
@@ -116,7 +136,7 @@ export default function GameDatabase() {
         const blackElo = game.black.rating || 0;
         const username = localStorage.getItem("username") || "";
         const playerElo = game.white.name === username ? whiteElo : blackElo;
-        
+
         if (playerElo < eloRangeFilter[0] || playerElo > eloRangeFilter[1]) {
           return false;
         }
@@ -124,9 +144,10 @@ export default function GameDatabase() {
         // Custom Tags filter
         if (customTagFilter && customTagFilter.trim() !== "") {
           const searchTerm = customTagFilter.toLowerCase().trim();
-          if (!game.tags || !game.tags.some(tag => 
-            tag.toLowerCase().includes(searchTerm)
-          )) {
+          if (
+            !game.tags ||
+            !game.tags.some((tag) => tag.toLowerCase().includes(searchTerm))
+          ) {
             return false;
           }
         }
@@ -138,7 +159,18 @@ export default function GameDatabase() {
     };
 
     filterGames();
-  }, [games, platformFilter, resultFilter, colorFilter, openingFilter, showFavoritesOnly, eloRangeFilter, customTagFilter, folderFilter, getFolderGames]);
+  }, [
+    games,
+    platformFilter,
+    resultFilter,
+    colorFilter,
+    openingFilter,
+    showFavoritesOnly,
+    eloRangeFilter,
+    customTagFilter,
+    folderFilter,
+    getFolderGames,
+  ]);
 
   const handleDeleteGameRow = useCallback(
     (id: GridRowId) => async () => {
@@ -147,7 +179,7 @@ export default function GameDatabase() {
       }
       await deleteGame(id);
     },
-    [deleteGame]
+    [deleteGame],
   );
 
   const handleBulkDelete = async (gameIds: number[]) => {
@@ -159,28 +191,28 @@ export default function GameDatabase() {
 
   const handleBulkTag = async (gameIds: number[], tags: string[]) => {
     for (const id of gameIds) {
-      const game = games.find(g => g.id === id);
+      const game = games.find((g) => g.id === id);
       if (game) {
         await updateGame(id, { ...game, tags });
       }
     }
   };
 
-  const handleCopyGameRow = useCallback(
-    (id: GridRowId) => async () => {
-      if (typeof id !== "number") {
-        throw new Error("Unable to copy game");
-      }
-      await navigator.clipboard.writeText(games[id - 1].pgn);
-    },
-    [games]
-  );
+  // const handleCopyGameRow = useCallback(
+  //   (id: GridRowId) => async () => {
+  //     if (typeof id !== "number") {
+  //       throw new Error("Unable to copy game");
+  //     }
+  //     await navigator.clipboard.writeText(games[id - 1].pgn);
+  //   },
+  //   [games],
+  // );
 
   const handleToggleFavorite = useCallback(
     (game: Game) => async () => {
       await updateGame(game.id, { ...game, isFavorite: !game.isFavorite });
     },
-    [games, updateGame]
+    [updateGame],
   );
 
   const handleSaveNotes = (notes: string) => {
@@ -196,18 +228,24 @@ export default function GameDatabase() {
     async (game: Game, newTags: string[]) => {
       await updateGame(game.id, { ...game, tags: newTags });
     },
-    [updateGame]
+    [updateGame],
   );
 
-  const handleBulkMoveToFolder = async (gameIds: number[], folderId: number) => {
+  const handleBulkMoveToFolder = async (
+    gameIds: number[],
+    folderId: number,
+  ) => {
     await moveGamesToFolder(gameIds, folderId);
     setSelectedRows([]);
   };
 
-  const handleExportClick = (game: Game) => (event: React.MouseEvent<HTMLElement>) => {
-    setSelectedExportGame(game);
-    setAnchorEl(event.currentTarget);
-  };
+  const handleExportClick = useCallback(
+    (game: Game) => (event: React.MouseEvent<HTMLElement>) => {
+      setSelectedExportGame(game);
+      setAnchorEl(event.currentTarget);
+    },
+    [setSelectedExportGame, setAnchorEl]
+  );
 
   const handleExportClose = () => {
     setAnchorEl(null);
@@ -224,7 +262,7 @@ export default function GameDatabase() {
         console.error("Failed to export PGN:", error);
       }
     },
-    []
+    [],
   );
 
   const columns: GridColDef[] = useMemo(
@@ -244,7 +282,9 @@ export default function GameDatabase() {
                 {row.isFavorite ? <StarIcon /> : <StarBorderIcon />}
               </IconButton>
             }
-            label={row.isFavorite ? "Remove from favorites" : "Add to favorites"}
+            label={
+              row.isFavorite ? "Remove from favorites" : "Add to favorites"
+            }
             color="inherit"
             key={`${id}-favorite-button`}
           />,
@@ -371,10 +411,10 @@ export default function GameDatabase() {
         renderCell: (params: any) => {
           const game = params.row as Game;
           return (
-            <Box 
-              sx={{ 
-                display: "flex", 
-                gap: 0.5, 
+            <Box
+              sx={{
+                display: "flex",
+                gap: 0.5,
                 flexWrap: "wrap",
                 width: "100%",
                 alignItems: "center",
@@ -438,7 +478,7 @@ export default function GameDatabase() {
         },
       },
     ],
-    [handleDeleteGameRow, handleToggleFavorite, handleExportClick]
+    [router, games, handleToggleFavorite, handleExportClick]
   );
 
   return (
@@ -451,17 +491,25 @@ export default function GameDatabase() {
 
       <Grid container justifyContent="center" alignItems="center" size={12}>
         <Typography variant="subtitle2">
-          You have {filteredGames.length} game{filteredGames.length !== 1 && "s"} in your
-          database
+          You have {filteredGames.length} game
+          {filteredGames.length !== 1 && "s"} in your database
         </Typography>
       </Grid>
 
-      <Grid container justifyContent="center" alignItems="center" size={12} paddingX={4}>
+      <Grid
+        container
+        justifyContent="center"
+        alignItems="center"
+        size={12}
+        paddingX={4}
+      >
         <DatabaseFilters />
       </Grid>
 
       <BulkActions
-        selectedGames={selectedRows.map(id => games.find(g => g.id === id)).filter((g): g is Game => !!g)}
+        selectedGames={selectedRows
+          .map((id) => games.find((g) => g.id === id))
+          .filter((g): g is Game => !!g)}
         onBulkDelete={handleBulkDelete}
         onBulkTag={handleBulkTag}
         onBulkMoveToFolder={handleBulkMoveToFolder}
@@ -516,13 +564,17 @@ export default function GameDatabase() {
         onClose={handleExportClose}
       >
         <MenuItem onClick={handleToggleFavorite(selectedExportGame!)}>
-          <Icon 
-            icon={selectedExportGame?.isFavorite ? "mdi:star" : "mdi:star-outline"} 
-            style={{ marginRight: 8 }} 
+          <Icon
+            icon={
+              selectedExportGame?.isFavorite ? "mdi:star" : "mdi:star-outline"
+            }
+            style={{ marginRight: 8 }}
           />
-          {selectedExportGame?.isFavorite ? "Remove from favorites" : "Add to favorites"}
+          {selectedExportGame?.isFavorite
+            ? "Remove from favorites"
+            : "Add to favorites"}
         </MenuItem>
-        <MenuItem 
+        <MenuItem
           onClick={() => {
             setSelectedGame(selectedExportGame);
             setIsNotesDialogOpen(true);

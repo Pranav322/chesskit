@@ -1,13 +1,14 @@
+import React from "react";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
+
 import IconButton from "@mui/material/IconButton";
 import { useEffect, useState } from "react";
 import NavMenu from "./NavMenu";
 import { Icon } from "@iconify/react";
 import { useRouter } from "next/router";
-import NavLink from "@/components/NavLink";
+
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -101,9 +102,9 @@ export default function NavBar({ darkMode, switchDarkMode }: Props) {
                 onClick={handleProfileMenuOpen}
                 size="small"
                 sx={{ ml: 2 }}
-                aria-controls={Boolean(anchorEl) ? "account-menu" : undefined}
+                aria-controls={anchorEl ? "account-menu" : undefined}
                 aria-haspopup="true"
-                aria-expanded={Boolean(anchorEl) ? "true" : undefined}
+                aria-expanded={anchorEl ? "true" : undefined}
               >
                 <Avatar
                   sx={{

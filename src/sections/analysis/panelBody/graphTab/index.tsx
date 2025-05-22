@@ -34,12 +34,12 @@ export default function GraphTab(props: GridProps) {
 
   const chartData: ChartItemData[] = useMemo(
     () => gameEval?.positions.map(formatEvalToChartData) ?? [],
-    [gameEval]
+    [gameEval],
   );
 
   const bestDotIndices = useMemo(() => {
     const bestItems = chartData.filter(
-      (item) => item.moveClassification === MoveClassification.Best
+      (item) => item.moveClassification === MoveClassification.Best,
     );
     const count = Math.ceil(bestItems.length * 0.15);
     const indices = bestItems.map((item) => item.moveNb);
@@ -57,7 +57,7 @@ export default function GraphTab(props: GridProps) {
   // Render a dot only on selected classifications (always returns an element)
   const renderDot = useCallback(
     (
-      props: DotProps & { payload?: ChartItemData }
+      props: DotProps & { payload?: ChartItemData },
     ): ReactElement<SVGElement> => {
       const payload = props.payload;
       const moveClass = payload?.moveClassification;
@@ -78,7 +78,7 @@ export default function GraphTab(props: GridProps) {
 
       return <svg key={props.key} />;
     },
-    [bestDotIndices]
+    [bestDotIndices],
   );
 
   if (!gameEval) return null;
@@ -165,7 +165,7 @@ export default function GraphTab(props: GridProps) {
 
 const formatEvalToChartData = (
   position: PositionEval,
-  index: number
+  index: number,
 ): ChartItemData => {
   const line = position.lines[0];
 

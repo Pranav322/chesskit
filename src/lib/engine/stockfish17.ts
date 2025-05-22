@@ -6,7 +6,7 @@ import { getEngineWorkers } from "./worker";
 export class Stockfish17 {
   public static async create(
     lite?: boolean,
-    workersNb?: number
+    workersNb?: number,
   ): Promise<UciEngine> {
     if (!Stockfish17.isSupported()) {
       throw new Error("Stockfish 17 is not supported");

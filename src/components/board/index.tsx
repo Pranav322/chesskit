@@ -76,13 +76,13 @@ export default function Board({
       if (canPlay === true || canPlay === piece[0]) return true;
       return false;
     },
-    [canPlay, game]
+    [canPlay, game],
   );
 
   const onPieceDrop = (
     source: Square,
     target: Square,
-    piece: string
+    piece: string,
   ): boolean => {
     if (!isPiecePlayable({ piece })) return false;
 
@@ -147,7 +147,7 @@ export default function Board({
     setClickedSquares((prev) =>
       prev.includes(square)
         ? prev.filter((s) => s !== square)
-        : [...prev, square]
+        : [...prev, square],
     );
   };
 
@@ -162,7 +162,7 @@ export default function Board({
   const onPromotionPieceSelect = (
     piece?: PromotionPieceOption,
     from?: Square,
-    to?: Square
+    to?: Square,
   ) => {
     if (!piece) return false;
     const promotionPiece = piece[1]?.toLowerCase() ?? "q";
@@ -250,7 +250,7 @@ export default function Board({
 
         return acc;
       }, {}),
-    [pieceSet]
+    [pieceSet],
   );
 
   return (

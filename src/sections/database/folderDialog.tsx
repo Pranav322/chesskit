@@ -28,8 +28,14 @@ interface Props {
   selectedCount?: number;
 }
 
-export default function FolderDialog({ open, onClose, onMoveToFolder, selectedCount }: Props) {
-  const { folders, createFolder, updateFolder, deleteFolder } = useGameDatabase(false);
+export default function FolderDialog({
+  open,
+  onClose,
+  onMoveToFolder,
+  selectedCount,
+}: Props) {
+  const { folders, createFolder, updateFolder, deleteFolder } =
+    useGameDatabase(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
   const [editName, setEditName] = useState("");
@@ -55,7 +61,9 @@ export default function FolderDialog({ open, onClose, onMoveToFolder, selectedCo
   };
 
   const handleDeleteFolder = async (folder: Folder) => {
-    if (confirm(`Are you sure you want to delete the folder "${folder.name}"?`)) {
+    if (
+      confirm(`Are you sure you want to delete the folder "${folder.name}"?`)
+    ) {
       await deleteFolder(folder.id);
     }
   };
@@ -70,8 +78,8 @@ export default function FolderDialog({ open, onClose, onMoveToFolder, selectedCo
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        {onMoveToFolder 
-          ? `Move ${selectedCount} Game${selectedCount !== 1 ? 's' : ''} to Folder` 
+        {onMoveToFolder
+          ? `Move ${selectedCount} Game${selectedCount !== 1 ? "s" : ""} to Folder`
           : "Manage Folders"}
       </DialogTitle>
       <DialogContent>
@@ -89,7 +97,7 @@ export default function FolderDialog({ open, onClose, onMoveToFolder, selectedCo
             }}
             InputProps={{
               endAdornment: (
-                <IconButton 
+                <IconButton
                   onClick={handleCreateFolder}
                   disabled={!newFolderName.trim()}
                   size="small"
@@ -108,7 +116,14 @@ export default function FolderDialog({ open, onClose, onMoveToFolder, selectedCo
             <ListItem
               key={folder.id}
               onClick={() => onMoveToFolder && handleMoveToFolder(folder)}
-              sx={onMoveToFolder ? { cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } } : undefined}
+              sx={
+                onMoveToFolder
+                  ? {
+                      cursor: "pointer",
+                      "&:hover": { bgcolor: "action.hover" },
+                    }
+                  : undefined
+              }
             >
               {editingFolder?.id === folder.id ? (
                 <TextField
@@ -124,12 +139,12 @@ export default function FolderDialog({ open, onClose, onMoveToFolder, selectedCo
                   autoFocus
                 />
               ) : (
-                <ListItemText 
+                <ListItemText
                   primary={folder.name}
                   secondary={`Created ${folder.createdAt.toLocaleDateString()}`}
                 />
               )}
-              
+
               {!onMoveToFolder && (
                 <ListItemSecondaryAction>
                   <IconButton
@@ -155,16 +170,17 @@ export default function FolderDialog({ open, onClose, onMoveToFolder, selectedCo
         </List>
 
         {folders.length === 0 && (
-          <Typography color="text.secondary" sx={{ textAlign: 'center', mt: 2 }}>
+          <Typography
+            color="text.secondary"
+            sx={{ textAlign: "center", mt: 2 }}
+          >
             No folders created yet
           </Typography>
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>
-          {onMoveToFolder ? "Cancel" : "Close"}
-        </Button>
+        <Button onClick={onClose}>{onMoveToFolder ? "Cancel" : "Close"}</Button>
       </DialogActions>
     </Dialog>
   );
-} 
+}

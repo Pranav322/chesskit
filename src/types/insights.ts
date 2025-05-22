@@ -102,4 +102,4 @@ export interface ColorStats {
   losses: number;
   draws: number;
   winRate: number;
-} 
+}

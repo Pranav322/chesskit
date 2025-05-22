@@ -51,7 +51,7 @@ export default function CapturedPieces({ fen, color }: Props) {
 
 const getCapturedPiecesCSSProps = (
   capturedPieces: Record<string, number | undefined>,
-  color: Color
+  color: Color,
 ): CSSProperties[] => {
   const cssProps: CSSProperties[] = [];
 

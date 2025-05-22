@@ -20,7 +20,13 @@ interface Props {
   isBulkEdit?: boolean;
 }
 
-export default function TagsDialog({ open, onClose, game, onSave, isBulkEdit }: Props) {
+export default function TagsDialog({
+  open,
+  onClose,
+  game,
+  onSave,
+  isBulkEdit,
+}: Props) {
   const [tags, setTags] = useState<string[]>(game.tags || []);
   const [newTag, setNewTag] = useState("");
 
@@ -85,4 +91,4 @@ export default function TagsDialog({ open, onClose, game, onSave, isBulkEdit }: 
       </DialogActions>
     </Dialog>
   );
-} 
+}

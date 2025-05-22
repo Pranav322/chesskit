@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { FirebaseError } from "firebase/app";
 import {
   User,
@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribeToken = onIdTokenChanged(auth, async (user) => {
       if (user) {
         // Force token refresh if it's close to expiring
-        const token = await user.getIdToken(true);
+        // const _token = await user.getIdToken(true);
         // You could store the token in memory here if needed
         // Or handle it according to your needs
       }

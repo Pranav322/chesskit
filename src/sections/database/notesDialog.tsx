@@ -16,7 +16,12 @@ interface NotesDialogProps {
   onSave: (notes: string) => void;
 }
 
-export default function NotesDialog({ open, onClose, game, onSave }: NotesDialogProps) {
+export default function NotesDialog({
+  open,
+  onClose,
+  game,
+  onSave,
+}: NotesDialogProps) {
   const [notes, setNotes] = useState(game.notes || "");
 
   useEffect(() => {
@@ -54,4 +59,4 @@ export default function NotesDialog({ open, onClose, game, onSave }: NotesDialog
       </DialogActions>
     </Dialog>
   );
-} 
+}

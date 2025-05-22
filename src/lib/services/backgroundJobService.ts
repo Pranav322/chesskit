@@ -1,13 +1,13 @@
-import { GameImportOptions } from '@/types/importedGame';
-import { FirestoreService } from './firestore';
-import { GameImportService } from './gameImportService';
-import { Timestamp } from 'firebase/firestore';
+import { GameImportOptions } from "@/types/importedGame";
+import { FirestoreService } from "./firestore";
+import { GameImportService } from "./gameImportService";
+import { Timestamp } from "firebase/firestore";
 
 interface JobData {
   id: string;
   userId: string;
-  type: 'import';
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  type: "import";
+  status: "pending" | "processing" | "completed" | "failed";
   data: {
     username: string;
     options: GameImportOptions;
@@ -36,12 +36,12 @@ export class BackgroundJobService {
   async createImportJob(
     userId: string,
     username: string,
-    options: GameImportOptions
+    options: GameImportOptions,
   ): Promise<string> {
-    const jobData: Omit<JobData, 'id'> = {
+    const jobData: Omit<JobData, "id"> = {
       userId,
-      type: 'import',
-      status: 'pending',
+      type: "import",
+      status: "pending",
       data: {
         username,
         options,
@@ -57,7 +57,7 @@ export class BackgroundJobService {
 
     // Create job in Firestore
     const jobRef = await this.firestoreService.createBackgroundJob(jobData);
-    
+
     // Start processing if not already processing
     if (!this.isProcessing) {
       this.processNextJob();
@@ -79,46 +79,37 @@ export class BackgroundJobService {
         return;
       }
 
-      this.currentJobId = job.id;
+      this.currentJobId = (job as { id: string }).id;
 
       // Update job status to processing
-      await this.firestoreService.updateBackgroundJob(job.id, {
-        status: 'processing',
-        updatedAt: Timestamp.now(),
+      await this.firestoreService.updateBackgroundJob((job as { id: string }).id, {
+        status: "running",
       });
 
       // Process the job
       await this.gameImportService.importGames(
-        job.userId,
-        job.data.username,
-        job.data.options,
+        (job as { userId: string }).userId,
+        (job as { data: { username: string } }).data.username,
+        (job as { data: { options: any } }).data.options,
         async (progress) => {
           // Update job progress
-          await this.firestoreService.updateBackgroundJob(job.id, {
-            progress: {
-              total: progress.total,
-              completed: progress.completed,
-              failed: progress.failed,
-            },
-            status: progress.status === 'completed' ? 'completed' : 'processing',
-            updatedAt: Timestamp.now(),
-            ...(progress.error && { error: progress.error }),
+          await this.firestoreService.updateBackgroundJob((job as { id: string }).id, {
+            progress,
           });
-        }
+        },
       );
 
       // Mark job as completed
-      await this.firestoreService.updateBackgroundJob(job.id, {
-        status: 'completed',
-        updatedAt: Timestamp.now(),
+      await this.firestoreService.updateBackgroundJob((job as { id: string }).id, {
+        status: "completed",
       });
-
     } catch (error) {
       // Update job with error
       if (this.currentJobId) {
         await this.firestoreService.updateBackgroundJob(this.currentJobId, {
-          status: 'failed',
-          error: error instanceof Error ? error.message : 'Unknown error occurred',
+          status: "failed",
+          error:
+            error instanceof Error ? error.message : "Unknown error occurred",
           updatedAt: Timestamp.now(),
         });
       }
@@ -137,9 +128,9 @@ export class BackgroundJobService {
 
   async cancelJob(jobId: string): Promise<void> {
     await this.firestoreService.updateBackgroundJob(jobId, {
-      status: 'failed',
-      error: 'Job cancelled by user',
+      status: "failed",
+      error: "Job cancelled by user",
       updatedAt: Timestamp.now(),
     });
   }
-} 
+}

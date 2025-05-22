@@ -11,4 +11,4 @@ export interface GameFolder {
   id: number;
   gameId: number;
   folderId: number;
-} 
+}

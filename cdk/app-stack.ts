@@ -71,14 +71,14 @@ export class AppStack extends cdk.Stack {
       mainBucket,
       {
         originAccessLevels: [AccessLevel.READ],
-      }
+      },
     );
 
     const enginesOriginAccessControl = S3BucketOrigin.withOriginAccessControl(
       enginesBucket,
       {
         originAccessLevels: [AccessLevel.READ],
-      }
+      },
     );
 
     const responseHeadersPolicy = new ResponseHeadersPolicy(
@@ -99,7 +99,7 @@ export class AppStack extends cdk.Stack {
             },
           ],
         },
-      }
+      },
     );
 
     const hostedZone = HostedZone.fromLookup(this, "HostedZone", {

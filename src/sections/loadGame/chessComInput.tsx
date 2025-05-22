@@ -21,7 +21,7 @@ interface Props {
 export default function ChessComInput({ onSelect }: Props) {
   const [chessComUsername, setChessComUsername] = useLocalStorage(
     "chesscom-username",
-    ""
+    "",
   );
   const debouncedUsername = useDebounce(chessComUsername, 200);
   const setBoardOrientation = useSetAtom(boardOrientationAtom);
@@ -72,7 +72,7 @@ export default function ChessComInput({ onSelect }: Props) {
                 onClick={() => {
                   setBoardOrientation(
                     chessComUsername.toLowerCase() !==
-                      game.black.username.toLowerCase()
+                      game.black.username.toLowerCase(),
                   );
                   onSelect(game.pgn);
                 }}
@@ -86,7 +86,7 @@ export default function ChessComInput({ onSelect }: Props) {
                     game.black.rating || "?"
                   })`}
                   secondary={`${capitalize(game.time_class)} played at ${new Date(
-                    game.end_time * 1000
+                    game.end_time * 1000,
                   )
                     .toLocaleString()
                     .slice(0, -3)}`}

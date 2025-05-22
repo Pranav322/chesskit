@@ -5,7 +5,7 @@ export const isSentryEnabled = () =>
 
 export const logErrorToSentry = (
   error: unknown,
-  context?: Record<string, unknown>
+  context?: Record<string, unknown>,
 ) => {
   if (isSentryEnabled()) {
     Sentry.captureException(error, {

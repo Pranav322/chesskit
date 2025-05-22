@@ -26,11 +26,11 @@ export const computeAccuracy = (positions: PositionEval[]): Accuracy => {
 const getPlayerAccuracy = (
   movesAccuracy: number[],
   weights: number[],
-  player: "white" | "black"
+  player: "white" | "black",
 ): number => {
   const remainder = player === "white" ? 0 : 1;
   const playerAccuracies = movesAccuracy.filter(
-    (_, index) => index % 2 === remainder
+    (_, index) => index % 2 === remainder,
   );
   const playerWeights = weights.filter((_, index) => index % 2 === remainder);
 
@@ -44,7 +44,7 @@ const getAccuracyWeights = (movesWinPercentage: number[]): number[] => {
   const windowSize = ceilsNumber(
     Math.ceil(movesWinPercentage.length / 10),
     2,
-    8
+    8,
   );
 
   const windows: number[][] = [];

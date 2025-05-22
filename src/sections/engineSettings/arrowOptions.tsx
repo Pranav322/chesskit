@@ -8,11 +8,11 @@ import { useAtomLocalStorage } from "@/hooks/useAtomLocalStorage";
 export default function ArrowOptions() {
   const [showBestMove, setShowBestMove] = useAtomLocalStorage(
     "show-arrow-best-move",
-    showBestMoveArrowAtom
+    showBestMoveArrowAtom,
   );
   const [showPlayerMoveIcon, setShowPlayerMoveIcon] = useAtomLocalStorage(
     "show-icon-player-move",
-    showPlayerMoveIconAtom
+    showPlayerMoveIconAtom,
   );
 
   return (

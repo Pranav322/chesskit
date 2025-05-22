@@ -11,7 +11,7 @@ import { formatUciPv } from "./chess";
 
 export const getLichessEval = async (
   fen: string,
-  multiPv = 1
+  multiPv = 1,
 ): Promise<PositionEval> => {
   try {
     const data = await fetchLichessEval(fen, multiPv);
@@ -56,11 +56,11 @@ export const getLichessEval = async (
 };
 
 export const getLichessUserRecentGames = async (
-  username: string
+  username: string,
 ): Promise<LichessGame[]> => {
   const res = await fetch(
     `https://lichess.org/api/games/user/${username}?until=${Date.now()}&max=50&pgnInJson=true&sort=dateDesc&clocks=true`,
-    { method: "GET", headers: { accept: "application/x-ndjson" } }
+    { method: "GET", headers: { accept: "application/x-ndjson" } },
   );
 
   if (res.status === 404) return [];
@@ -76,12 +76,12 @@ export const getLichessUserRecentGames = async (
 
 const fetchLichessEval = async (
   fen: string,
-  multiPv: number
+  multiPv: number,
 ): Promise<LichessResponse<LichessEvalBody>> => {
   try {
     const res = await fetch(
       `https://lichess.org/api/cloud-eval?fen=${fen}&multiPv=${multiPv}`,
-      { method: "GET", signal: AbortSignal.timeout(200) }
+      { method: "GET", signal: AbortSignal.timeout(200) },
     );
 
     return res.json();

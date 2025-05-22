@@ -21,7 +21,7 @@ interface Props {
 export default function LichessInput({ onSelect }: Props) {
   const [lichessUsername, setLichessUsername] = useLocalStorage(
     "lichess-username",
-    ""
+    "",
   );
   const debouncedUsername = useDebounce(lichessUsername, 200);
   const setBoardOrientation = useSetAtom(boardOrientationAtom);
@@ -72,7 +72,7 @@ export default function LichessInput({ onSelect }: Props) {
                 onClick={() => {
                   setBoardOrientation(
                     lichessUsername.toLowerCase() !==
-                      game.players?.black?.user?.name.toLowerCase()
+                      game.players?.black?.user?.name.toLowerCase(),
                   );
                   onSelect(game.pgn);
                 }}
@@ -88,7 +88,7 @@ export default function LichessInput({ onSelect }: Props) {
                     "Black"
                   } (${game.players?.black?.rating || "?"})`}
                   secondary={`${capitalize(game.speed)} played at ${new Date(
-                    game.lastMoveAt
+                    game.lastMoveAt,
                   )
                     .toLocaleString()
                     .slice(0, -3)}`}

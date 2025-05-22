@@ -22,7 +22,7 @@ export default function ClassificationRow({ classification }: Props) {
     if (!gameEval) return 0;
     return gameEval.positions.filter(
       (position, idx) =>
-        idx % 2 !== 0 && position.moveClassification === classification
+        idx % 2 !== 0 && position.moveClassification === classification,
     ).length;
   }, [gameEval, classification]);
 
@@ -30,7 +30,7 @@ export default function ClassificationRow({ classification }: Props) {
     if (!gameEval) return 0;
     return gameEval.positions.filter(
       (position, idx) =>
-        idx % 2 === 0 && position.moveClassification === classification
+        idx % 2 === 0 && position.moveClassification === classification,
     ).length;
   }, [gameEval, classification]);
 
@@ -52,7 +52,7 @@ export default function ClassificationRow({ classification }: Props) {
       (position, idx) =>
         filterColor(idx) &&
         position.moveClassification === classification &&
-        idx > moveIdx
+        idx > moveIdx,
     );
 
     if (nextPositionIdx > 0) {
@@ -60,7 +60,7 @@ export default function ClassificationRow({ classification }: Props) {
     } else {
       const firstPositionIdx = gameEval.positions.findIndex(
         (position, idx) =>
-          filterColor(idx) && position.moveClassification === classification
+          filterColor(idx) && position.moveClassification === classification,
       );
       if (firstPositionIdx > 0 && firstPositionIdx !== moveIdx) {
         goToMove(firstPositionIdx, game);

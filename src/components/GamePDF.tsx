@@ -73,9 +73,15 @@ export const GamePDF = ({ game }: GamePDFProps) => {
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <Text style={styles.title}>Chess Game Analysis</Text>
-          <Text style={styles.metadata}>Event: {game.event || "Casual Game"}</Text>
-          <Text style={styles.metadata}>Date: {game.date || "Unknown Date"}</Text>
-          <Text style={styles.metadata}>Site: {game.site || "Unknown Site"}</Text>
+          <Text style={styles.metadata}>
+            Event: {game.event || "Casual Game"}
+          </Text>
+          <Text style={styles.metadata}>
+            Date: {game.date || "Unknown Date"}
+          </Text>
+          <Text style={styles.metadata}>
+            Site: {game.site || "Unknown Site"}
+          </Text>
         </View>
 
         <View style={styles.gameInfo}>
@@ -118,4 +124,4 @@ export const GamePDF = ({ game }: GamePDFProps) => {
       </Page>
     </Document>
   );
-}; 
+};

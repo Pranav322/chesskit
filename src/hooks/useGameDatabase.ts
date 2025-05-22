@@ -8,6 +8,8 @@ import { atom, useAtom } from "jotai";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Timestamp } from "firebase/firestore";
+import { GameOrigin } from "@/types/gameOrigin";
 
 interface GameDatabaseSchema extends DBSchema {
   games: {
@@ -17,12 +19,12 @@ interface GameDatabaseSchema extends DBSchema {
   folders: {
     value: Folder;
     key: number;
-    indexes: { 'by-parent': number };
+    indexes: { "by-parent": number };
   };
   gameFolders: {
     value: GameFolder;
     key: string; // Composite key "gameId:folderId"
-    indexes: { 'by-game': number; 'by-folder': number };
+    indexes: { "by-game": number; "by-folder": number };
   };
 }
 
@@ -49,24 +51,27 @@ export const useGameDatabase = (shouldFetchGames?: boolean) => {
       const db = await openDB<GameDatabaseSchema>("games", 2, {
         upgrade(db, oldVersion) {
           // Create games store if it doesn't exist
-          if (!db.objectStoreNames.contains('games')) {
-            db.createObjectStore("games", { keyPath: "id", autoIncrement: true });
+          if (!db.objectStoreNames.contains("games")) {
+            db.createObjectStore("games", {
+              keyPath: "id",
+              autoIncrement: true,
+            });
           }
 
           // Create folders store if upgrading from v1 or new install
           if (oldVersion < 2) {
-            const folderStore = db.createObjectStore("folders", { 
-              keyPath: "id", 
-              autoIncrement: true 
+            const folderStore = db.createObjectStore("folders", {
+              keyPath: "id",
+              autoIncrement: true,
             });
-            folderStore.createIndex('by-parent', 'parentId');
+            folderStore.createIndex("by-parent", "parentId");
 
             const gameFoldersStore = db.createObjectStore("gameFolders", {
               keyPath: "id",
-              autoIncrement: true
+              autoIncrement: true,
             });
-            gameFoldersStore.createIndex('by-game', 'gameId');
-            gameFoldersStore.createIndex('by-folder', 'folderId');
+            gameFoldersStore.createIndex("by-game", "gameId");
+            gameFoldersStore.createIndex("by-folder", "folderId");
           }
         },
       });
@@ -96,104 +101,161 @@ export const useGameDatabase = (shouldFetchGames?: boolean) => {
   }, [loadGames, loadFolders]);
 
   // Folder operations
-  const createFolder = useCallback(async (folder: Omit<Folder, 'id' | 'createdAt' | 'updatedAt'>) => {
-    if (!db) throw new Error("Database not initialized");
-    
-    const now = new Date();
-    const newFolder: Omit<Folder, 'id'> = {
-      ...folder,
-      createdAt: now,
-      updatedAt: now
-    };
-    
-    const id = await db.add("folders", newFolder as Folder);
-    loadFolders();
-    return id;
-  }, [db, loadFolders]);
+  const createFolder = useCallback(
+    async (folder: Omit<Folder, "id" | "createdAt" | "updatedAt">) => {
+      if (!db) throw new Error("Database not initialized");
 
-  const updateFolder = useCallback(async (id: number, updates: Partial<Folder>) => {
-    if (!db) throw new Error("Database not initialized");
-    
-    const folder = await db.get("folders", id);
-    if (!folder) throw new Error("Folder not found");
-    
-    const updatedFolder = {
-      ...folder,
-      ...updates,
-      updatedAt: new Date()
-    };
-    
-    await db.put("folders", updatedFolder);
-    loadFolders();
-  }, [db, loadFolders]);
+      const now = new Date();
+      const newFolder: Omit<Folder, "id"> = {
+        ...folder,
+        createdAt: now,
+        updatedAt: now,
+      };
 
-  const deleteFolder = useCallback(async (id: number) => {
-    if (!db) throw new Error("Database not initialized");
-    
-    // Delete the folder
-    await db.delete("folders", id);
-    
-    // Delete all game associations with this folder
-    const tx = db.transaction("gameFolders", "readwrite");
-    const gameAssociations = await tx.store.index('by-folder').getAll(id);
-    await Promise.all(gameAssociations.map(assoc => tx.store.delete(assoc.id)));
-    await tx.done;
-    
-    loadFolders();
-  }, [db, loadFolders]);
+      const id = await db.add("folders", newFolder as Folder);
+      loadFolders();
+      return id;
+    },
+    [db, loadFolders],
+  );
+
+  const updateFolder = useCallback(
+    async (id: number, updates: Partial<Folder>) => {
+      if (!db) throw new Error("Database not initialized");
+
+      const folder = await db.get("folders", id);
+      if (!folder) throw new Error("Folder not found");
+
+      const updatedFolder = {
+        ...folder,
+        ...updates,
+        updatedAt: new Date(),
+      };
+
+      await db.put("folders", updatedFolder);
+      loadFolders();
+    },
+    [db, loadFolders],
+  );
+
+  const deleteFolder = useCallback(
+    async (id: number) => {
+      if (!db) throw new Error("Database not initialized");
+
+      // Delete the folder
+      await db.delete("folders", id);
+
+      // Delete all game associations with this folder
+      const tx = db.transaction("gameFolders", "readwrite");
+      const gameAssociations = await tx.store.index("by-folder").getAll(id);
+      await Promise.all(
+        gameAssociations.map((assoc) => tx.store.delete(assoc.id)),
+      );
+      await tx.done;
+
+      loadFolders();
+    },
+    [db, loadFolders],
+  );
 
   // Game-Folder operations
-  const moveGamesToFolder = useCallback(async (gameIds: number[], folderId: number) => {
-    if (!db) throw new Error("Database not initialized");
-    
-    const tx = db.transaction("gameFolders", "readwrite");
-    
-    // Remove existing folder assignments for these games
-    for (const gameId of gameIds) {
-      const existingAssocs = await tx.store.index('by-game').getAll(gameId);
-      await Promise.all(existingAssocs.map(assoc => tx.store.delete(assoc.id)));
-    }
-    
-    // Add new folder assignments
-    await Promise.all(gameIds.map(gameId => 
-      tx.store.add({
+  const moveGamesToFolder = useCallback(
+    async (gameIds: number[], folderId: number) => {
+      if (!db) throw new Error("Database not initialized");
+
+      const tx = db.transaction("gameFolders", "readwrite");
+
+      // Remove existing folder assignments for these games
+      for (const gameId of gameIds) {
+        const existingAssocs = await tx.store.index("by-game").getAll(gameId.toString());
+        await Promise.all(
+          existingAssocs.map((assoc) => tx.store.delete(assoc.id)),
+        );
+      }
+
+      // Add new folder assignments
+      await Promise.all(
+        gameIds.map((gameId) =>
+          tx.store.add({
+            id: `${gameId}:${folderId}`,
+            gameId,
+            folderId,
+          }),
+        ),
+      );
+
+      await tx.done;
+    },
+    [db],
+  );
+
+  const getGameFolders = useCallback(
+    async (gameId: number): Promise<number[]> => {
+      if (!db) return [];
+
+      const associations = await db.getAllFromIndex(
+        "gameFolders",
+        "by-game",
         gameId,
-        folderId
-      })
-    ));
-    
-    await tx.done;
-  }, [db]);
+      );
+      return associations.map((assoc) => assoc.folderId);
+    },
+    [db],
+  );
 
-  const getGameFolders = useCallback(async (gameId: number): Promise<number[]> => {
-    if (!db) return [];
-    
-    const associations = await db.getAllFromIndex("gameFolders", "by-game", gameId);
-    return associations.map(assoc => assoc.folderId);
-  }, [db]);
+  const getFolderGames = useCallback(
+    async (folderId: number): Promise<number[]> => {
+      if (!db) return [];
 
-  const getFolderGames = useCallback(async (folderId: number): Promise<number[]> => {
-    if (!db) return [];
-    
-    const associations = await db.getAllFromIndex("gameFolders", "by-folder", folderId);
-    return associations.map(assoc => assoc.gameId);
-  }, [db]);
+      const associations = await db.getAllFromIndex(
+        "gameFolders",
+        "by-folder",
+        folderId,
+      );
+      return associations.map((assoc) => assoc.gameId);
+    },
+    [db],
+  );
 
-  const getUserGames = useCallback(async (_userId: string) => {
-    if (!db) throw new Error("Database not initialized");
-    if (!user) throw new Error("User not authenticated");
-    
-    const games = await db.getAll("games");
-    
-    // Ensure all required properties exist
-    return games.map(game => ({
-      ...game,
-      result: game.result || '?',
-      white: game.white || { name: 'White' },
-      black: game.black || { name: 'Black' },
-      metadata: game.metadata || { white: game.white || { name: 'White' }, black: game.black || { name: 'Black' } }
-    }));
-  }, [db, user]);
+  const getUserGames = useCallback(
+    async () => {
+      if (!db) throw new Error("Database not initialized");
+      if (!user) throw new Error("User not authenticated");
+
+      const games = await db.getAll("games");
+
+      // Convert to ImportedGameData type
+      return games.map((game) => ({
+        id: game.id.toString(),
+        userId: user.uid,
+        source: game.metadata?.platform || GameOrigin.Unknown,
+        originalId: game.id.toString(),
+        pgn: game.pgn,
+        metadata: {
+          date: new Timestamp(Math.floor(Date.now() / 1000), 0), // Current time as fallback
+          platform: game.metadata?.platform || GameOrigin.Unknown,
+          opening: game.tags
+            ?.find((tag) => tag.startsWith("Opening:"))
+            ?.slice(8),
+          timeControl: game.timeControl,
+          result: game.result,
+          white: {
+            name: game.white.name,
+            rating: game.white.rating,
+          },
+          black: {
+            name: game.black.name,
+            rating: game.black.rating,
+          },
+        },
+        importedAt: new Timestamp(Math.floor(Date.now() / 1000), 0), // Current time as fallback
+        lastAnalyzedAt: game.eval
+          ? new Timestamp(Math.floor(Date.now() / 1000), 0)
+          : undefined,
+      }));
+    },
+    [db, user],
+  );
 
   const addGame = useCallback(
     async (game: Chess) => {
@@ -206,7 +268,7 @@ export const useGameDatabase = (shouldFetchGames?: boolean) => {
 
       return gameId;
     },
-    [db, loadGames]
+    [db, loadGames],
   );
 
   const updateGame = useCallback(
@@ -216,7 +278,7 @@ export const useGameDatabase = (shouldFetchGames?: boolean) => {
       await db.put("games", updatedGame);
       loadGames();
     },
-    [db, loadGames]
+    [db, loadGames],
   );
 
   const setGameEval = useCallback(
@@ -230,7 +292,7 @@ export const useGameDatabase = (shouldFetchGames?: boolean) => {
 
       loadGames();
     },
-    [db, loadGames]
+    [db, loadGames],
   );
 
   const getGame = useCallback(
@@ -239,7 +301,7 @@ export const useGameDatabase = (shouldFetchGames?: boolean) => {
 
       return db.get("games", gameId);
     },
-    [db]
+    [db],
   );
 
   const deleteGame = useCallback(
@@ -250,7 +312,7 @@ export const useGameDatabase = (shouldFetchGames?: boolean) => {
 
       loadGames();
     },
-    [db, loadGames]
+    [db, loadGames],
   );
 
   const router = useRouter();

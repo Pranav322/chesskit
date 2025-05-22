@@ -10,20 +10,23 @@ import {
   limit,
   Timestamp,
   updateDoc,
-  DocumentReference,
   FirestoreError,
   deleteDoc,
   runTransaction,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { ImportedGameData, ImportHistoryData, ImportProgressData } from '@/types/database';
-import { GameOrigin } from '@/types/enums';
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import {
+  ImportedGameData,
+  ImportHistoryData,
+  ImportProgressData,
+} from "@/types/database";
+import { GameOrigin } from "@/types/enums";
 
 export class FirestoreService {
-  private gamesCollection = collection(db, 'games');
-  private importHistoryCollection = collection(db, 'importHistory');
-  private importProgressCollection = collection(db, 'importProgress');
-  private backgroundJobsCollection = collection(db, 'backgroundJobs');
+  private gamesCollection = collection(db, "games");
+  private importHistoryCollection = collection(db, "importHistory");
+  private importProgressCollection = collection(db, "importProgress");
+  private backgroundJobsCollection = collection(db, "backgroundJobs");
 
   // Background Jobs Methods
   async createBackgroundJob<T extends object>(jobData: T): Promise<string> {
@@ -40,15 +43,15 @@ export class FirestoreService {
   async getBackgroundJob<T>(jobId: string): Promise<T | null> {
     const jobRef = doc(this.backgroundJobsCollection, jobId);
     const jobDoc = await getDoc(jobRef);
-    return jobDoc.exists() ? { id: jobDoc.id, ...jobDoc.data() } as T : null;
+    return jobDoc.exists() ? ({ id: jobDoc.id, ...jobDoc.data() } as T) : null;
   }
 
   async getNextPendingJob<T>(): Promise<T | null> {
     const jobQuery = query(
       this.backgroundJobsCollection,
-      where('status', '==', 'pending'),
-      orderBy('createdAt', 'asc'),
-      limit(1)
+      where("status", "==", "pending"),
+      orderBy("createdAt", "asc"),
+      limit(1),
     );
 
     const snapshot = await getDocs(jobQuery);
@@ -63,12 +66,12 @@ export class FirestoreService {
     userId: string,
     source: GameOrigin,
     totalGames: number,
-    metadata: ImportProgressData['metadata']
+    metadata: ImportProgressData["metadata"],
   ): Promise<string> {
-    const progressData: Omit<ImportProgressData, 'id'> = {
+    const progressData: Omit<ImportProgressData, "id"> = {
       userId,
       source,
-      status: 'importing',
+      status: "importing",
       totalGames,
       completedGames: 0,
       failedGames: 0,
@@ -84,7 +87,7 @@ export class FirestoreService {
 
   async updateImportProgress(
     progressId: string,
-    update: Partial<ImportProgressData>
+    update: Partial<ImportProgressData>,
   ): Promise<void> {
     const progressRef = doc(this.importProgressCollection, progressId);
     await updateDoc(progressRef, {
@@ -93,7 +96,9 @@ export class FirestoreService {
     });
   }
 
-  async getImportProgress(progressId: string): Promise<ImportProgressData | null> {
+  async getImportProgress(
+    progressId: string,
+  ): Promise<ImportProgressData | null> {
     const progressRef = doc(this.importProgressCollection, progressId);
     const progressDoc = await getDoc(progressRef);
     return progressDoc.exists()
@@ -105,11 +110,14 @@ export class FirestoreService {
   async createImportHistory(
     userId: string,
     source: GameOrigin,
-    status: ImportHistoryData['status'],
-    stats: Pick<ImportHistoryData, 'totalGames' | 'completedGames' | 'failedGames'>,
-    error?: string
+    status: ImportHistoryData["status"],
+    stats: Pick<
+      ImportHistoryData,
+      "totalGames" | "completedGames" | "failedGames"
+    >,
+    error?: string,
   ): Promise<string> {
-    const historyData: Omit<ImportHistoryData, 'id'> = {
+    const historyData: Omit<ImportHistoryData, "id"> = {
       userId,
       timestamp: Timestamp.now(),
       source,
@@ -123,27 +131,30 @@ export class FirestoreService {
     return historyRef.id;
   }
 
-  async getImportHistory(userId: string, limit = 10): Promise<ImportHistoryData[]> {
+  async getImportHistory(
+    userId: string,
+    limit = 10,
+  ): Promise<ImportHistoryData[]> {
     const historyQuery = query(
       this.importHistoryCollection,
-      where('userId', '==', userId),
-      orderBy('timestamp', 'desc'),
-      limit(limit)
+      where("userId", "==", userId),
+      orderBy("timestamp", "desc"),
+      limit(limit),
     );
 
     const snapshot = await getDocs(historyQuery);
     return snapshot.docs.map(
-      (doc) => ({ id: doc.id, ...doc.data() } as ImportHistoryData)
+      (doc) => ({ id: doc.id, ...doc.data() }) as ImportHistoryData,
     );
   }
 
   // Games Methods
-  async saveGame(game: Omit<ImportedGameData, 'id'>): Promise<string> {
+  async saveGame(game: Omit<ImportedGameData, "id">): Promise<string> {
     // First check if a game with this originalId already exists
     const existingGame = await this.findGameByOriginalId(
       game.userId,
       game.source,
-      game.originalId
+      game.originalId,
     );
 
     if (existingGame) {
@@ -159,16 +170,19 @@ export class FirestoreService {
     return gameRef.id;
   }
 
-  async saveOrUpdateGame(game: Omit<ImportedGameData, 'id'>, overwrite = false): Promise<string> {
+  async saveOrUpdateGame(
+    game: Omit<ImportedGameData, "id">,
+    overwrite = false,
+  ): Promise<string> {
     try {
       return await runTransaction(db, async (transaction) => {
         // Check for existing game with the same originalId
         const q = query(
           this.gamesCollection,
-          where('userId', '==', game.userId),
-          where('source', '==', game.source),
-          where('originalId', '==', game.originalId),
-          limit(1)
+          where("userId", "==", game.userId),
+          where("source", "==", game.source),
+          where("originalId", "==", game.originalId),
+          limit(1),
         );
 
         const snapshot = await getDocs(q);
@@ -176,7 +190,9 @@ export class FirestoreService {
 
         if (existingGame) {
           if (!overwrite) {
-            throw new Error(`Game with originalId ${game.originalId} already exists`);
+            throw new Error(
+              `Game with originalId ${game.originalId} already exists`,
+            );
           }
           // If overwrite is true, delete the existing game
           const existingRef = doc(this.gamesCollection, existingGame.id);
@@ -193,7 +209,7 @@ export class FirestoreService {
         return newGameRef.id;
       });
     } catch (error) {
-      console.error('Error in saveOrUpdateGame:', error);
+      console.error("Error in saveOrUpdateGame:", error);
       throw error;
     }
   }
@@ -213,54 +229,54 @@ export class FirestoreService {
       source?: GameOrigin;
       startDate?: Date;
       endDate?: Date;
-    } = {}
+    } = {},
   ): Promise<ImportedGameData[]> {
     const { limit: queryLimit = 50, source, startDate, endDate } = options;
 
     let gameQuery = query(
       this.gamesCollection,
-      where('userId', '==', userId),
-      orderBy('metadata.date', 'desc'),
-      limit(queryLimit)
+      where("userId", "==", userId),
+      orderBy("metadata.date", "desc"),
+      limit(queryLimit),
     );
 
     if (source) {
-      gameQuery = query(gameQuery, where('source', '==', source));
+      gameQuery = query(gameQuery, where("source", "==", source));
     }
 
     if (startDate) {
       gameQuery = query(
         gameQuery,
-        where('metadata.date', '>=', Timestamp.fromDate(startDate))
+        where("metadata.date", ">=", Timestamp.fromDate(startDate)),
       );
     }
 
     if (endDate) {
       gameQuery = query(
         gameQuery,
-        where('metadata.date', '<=', Timestamp.fromDate(endDate))
+        where("metadata.date", "<=", Timestamp.fromDate(endDate)),
       );
     }
 
     const snapshot = await getDocs(gameQuery);
     return snapshot.docs.map(
-      (doc) => ({ id: doc.id, ...doc.data() } as ImportedGameData)
+      (doc) => ({ id: doc.id, ...doc.data() }) as ImportedGameData,
     );
   }
 
   async findGameByOriginalId(
     userId: string,
     platform: GameOrigin,
-    originalId: string
+    originalId: string,
   ): Promise<ImportedGameData | null> {
     try {
-      const gamesRef = collection(db, 'games');
+      const gamesRef = collection(db, "games");
       const q = query(
         gamesRef,
-        where('userId', '==', userId),
-        where('source', '==', platform),
-        where('originalId', '==', originalId),
-        limit(1)
+        where("userId", "==", userId),
+        where("source", "==", platform),
+        where("originalId", "==", originalId),
+        limit(1),
       );
 
       const snapshot = await getDocs(q);
@@ -271,20 +287,20 @@ export class FirestoreService {
       const doc = snapshot.docs[0];
       return {
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       } as ImportedGameData;
     } catch (error) {
-      console.error('Error finding game by originalId:', error);
+      console.error("Error finding game by originalId:", error);
       return null;
     }
   }
 
   async deleteGame(gameId: string): Promise<void> {
     try {
-      const gameRef = doc(db, 'games', gameId);
+      const gameRef = doc(db, "games", gameId);
       await deleteDoc(gameRef);
     } catch (error) {
-      console.error('Error deleting game:', error);
+      console.error("Error deleting game:", error);
       throw error;
     }
   }
@@ -292,16 +308,16 @@ export class FirestoreService {
   // Error handling wrapper
   async handleFirestoreOperation<T>(
     operation: () => Promise<T>,
-    errorMessage: string
+    errorMessage: string,
   ): Promise<T> {
     try {
       return await operation();
     } catch (error) {
       console.error(
         `Firestore operation failed: ${errorMessage}`,
-        error instanceof FirestoreError ? error.code : error
+        error instanceof FirestoreError ? error.code : error,
       );
       throw error;
     }
   }
-} 
+}

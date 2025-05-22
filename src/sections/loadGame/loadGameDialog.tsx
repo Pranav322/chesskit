@@ -35,7 +35,7 @@ export default function NewGameDialog({ open, onClose, setGame }: Props) {
   const [pgn, setPgn] = useState("");
   const [gameOrigin, setGameOrigin] = useLocalStorage(
     "preferred-game-origin",
-    GameOrigin.Pgn
+    GameOrigin.Pgn,
   );
   const [parsingError, setParsingError] = useState("");
   const setBoardOrientation = useSetAtom(boardOrientationAtom);
@@ -61,7 +61,7 @@ export default function NewGameDialog({ open, onClose, setGame }: Props) {
       setParsingError(
         error instanceof Error
           ? `${error.message} !`
-          : "Unknown error while parsing PGN !"
+          : "Unknown error while parsing PGN !",
       );
     }
   };

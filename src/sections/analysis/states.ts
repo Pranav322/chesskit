@@ -9,7 +9,7 @@ export const gameAtom = atom(new Chess());
 export const boardAtom = atom(new Chess());
 export const currentPositionAtom = atom<CurrentPosition>({});
 
-export const boardOrientationAtom = atom(true);
+export const boardOrientationAtom = atom<boolean>(true);
 export const showBestMoveArrowAtom = atom(true);
 export const showPlayerMoveIconAtom = atom(true);
 

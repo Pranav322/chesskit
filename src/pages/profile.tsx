@@ -1,3 +1,4 @@
+import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import {
@@ -83,7 +84,11 @@ export default function Profile() {
                 </>
               ) : (
                 <>
-                  <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+                  <Typography
+                    variant="subtitle1"
+                    color="text.secondary"
+                    gutterBottom
+                  >
                     Display Name
                   </Typography>
                   <Typography variant="body1" gutterBottom>
@@ -102,12 +107,12 @@ export default function Profile() {
             </Box>
 
             <Divider sx={{ my: 4 }} />
-            
+
             <Typography variant="h6" gutterBottom>
               Game Analysis
             </Typography>
             <Box sx={{ mt: 2 }}>
-              <GameInsightsButton userId={user?.uid || ''} />
+              <GameInsightsButton userId={user?.uid || ""} />
             </Box>
           </Box>
         </Paper>

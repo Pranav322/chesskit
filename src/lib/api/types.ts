@@ -1,8 +1,11 @@
-import { ChessComGame } from '@/types/chessCom';
-import { LichessGame } from '@/types/lichess';
+import { ChessComGame } from "@/types/chessCom";
+import { LichessGame } from "@/types/lichess";
 
 export interface ChessPlatformAPI {
-  fetchGames(username: string, count: number): Promise<{
+  fetchGames(
+    username: string,
+    count: number,
+  ): Promise<{
     games: ChessComGame[] | LichessGame[];
     error?: string;
   }>;
@@ -13,4 +16,4 @@ export interface ImportServiceConfig {
   maxConcurrentRequests: number;
   requestDelay: number; // in milliseconds
   retryAttempts: number;
-} 
+}

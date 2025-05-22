@@ -29,7 +29,7 @@ export default function LoadGame() {
       setEval(undefined);
       setGamePgn(pgn);
     },
-    [resetBoard, setGamePgn, setEval]
+    [resetBoard, setGamePgn, setEval],
   );
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export default function LoadGame() {
       setBoardOrientation(
         gameFromUrl.black.name === "You" && gameFromUrl.site === "Chesskit.org"
           ? false
-          : true
+          : true,
       );
     };
 

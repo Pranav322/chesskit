@@ -1,3 +1,4 @@
+import React from "react";
 import { Box, Button, Menu, MenuItem, Typography } from "@mui/material";
 import { Game } from "@/types/game";
 import { useState } from "react";
@@ -11,11 +12,16 @@ interface BulkActionsProps {
   onBulkMoveToFolder: (gameIds: number[], folderId: number) => Promise<void>;
 }
 
-export default function BulkActions({ selectedGames, onBulkDelete, onBulkTag, onBulkMoveToFolder }: BulkActionsProps) {
+export default function BulkActions({
+  selectedGames,
+  onBulkDelete,
+  onBulkTag,
+  onBulkMoveToFolder,
+}: BulkActionsProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isTagsDialogOpen, setIsTagsDialogOpen] = useState(false);
   const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
-  
+
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -25,19 +31,29 @@ export default function BulkActions({ selectedGames, onBulkDelete, onBulkTag, on
   };
 
   const handleBulkDelete = async () => {
-    if (confirm(`Are you sure you want to delete ${selectedGames.length} game${selectedGames.length !== 1 ? 's' : ''}?`)) {
+    if (
+      confirm(
+        `Are you sure you want to delete ${selectedGames.length} game${selectedGames.length !== 1 ? "s" : ""}?`,
+      )
+    ) {
       handleClose();
-      await onBulkDelete(selectedGames.map(game => game.id));
+      await onBulkDelete(selectedGames.map((game) => game.id));
     }
   };
 
   const handleBulkTag = async (tags: string[]) => {
-    await onBulkTag(selectedGames.map(game => game.id), tags);
+    await onBulkTag(
+      selectedGames.map((game) => game.id),
+      tags,
+    );
     setIsTagsDialogOpen(false);
   };
 
   const handleMoveToFolder = async (folderId: number) => {
-    await onBulkMoveToFolder(selectedGames.map(game => game.id), folderId);
+    await onBulkMoveToFolder(
+      selectedGames.map((game) => game.id),
+      folderId,
+    );
   };
 
   if (selectedGames.length === 0) {
@@ -49,33 +65,29 @@ export default function BulkActions({ selectedGames, onBulkDelete, onBulkTag, on
       <Typography>
         {selectedGames.length} game{selectedGames.length !== 1 && "s"} selected
       </Typography>
-      
-      <Button
-        variant="contained"
-        onClick={handleClick}
-        color="primary"
-      >
+
+      <Button variant="contained" onClick={handleClick} color="primary">
         Bulk Actions
       </Button>
 
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleClose}
-      >
-        <MenuItem onClick={() => {
-          handleClose();
-          setIsTagsDialogOpen(true);
-        }}>
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+        <MenuItem
+          onClick={() => {
+            handleClose();
+            setIsTagsDialogOpen(true);
+          }}
+        >
           Add/Remove Tags
         </MenuItem>
-        <MenuItem onClick={() => {
-          handleClose();
-          setIsFolderDialogOpen(true);
-        }}>
+        <MenuItem
+          onClick={() => {
+            handleClose();
+            setIsFolderDialogOpen(true);
+          }}
+        >
           Move to Folder
         </MenuItem>
-        <MenuItem onClick={handleBulkDelete} sx={{ color: 'error.main' }}>
+        <MenuItem onClick={handleBulkDelete} sx={{ color: "error.main" }}>
           Delete Selected Games
         </MenuItem>
       </Menu>
@@ -96,4 +108,4 @@ export default function BulkActions({ selectedGames, onBulkDelete, onBulkTag, on
       />
     </Box>
   );
-} 
+}

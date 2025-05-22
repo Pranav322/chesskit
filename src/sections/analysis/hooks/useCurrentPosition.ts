@@ -52,7 +52,7 @@ export const useCurrentPosition = (engineName?: EngineName) => {
                 ...gameEval.positions[evalIndex - 1],
                 lines: gameEval.positions[evalIndex - 1].lines.slice(
                   0,
-                  multiPv
+                  multiPv,
                 ),
               }
             : undefined;
@@ -70,7 +70,7 @@ export const useCurrentPosition = (engineName?: EngineName) => {
     ) {
       const getFenEngineEval = async (
         fen: string,
-        setPartialEval?: (positionEval: PositionEval) => void
+        setPartialEval?: (positionEval: PositionEval) => void,
       ) => {
         if (!engine?.getIsReady() || !engineName)
           throw new Error("Engine not ready");
@@ -110,7 +110,7 @@ export const useCurrentPosition = (engineName?: EngineName) => {
         };
         const rawPositionEval = await getFenEngineEval(
           board.fen(),
-          setPartialEval
+          setPartialEval,
         );
 
         if (boardHistory.length === 0) return;
@@ -138,7 +138,7 @@ export const useCurrentPosition = (engineName?: EngineName) => {
         const positionsWithMoveClassification = getMovesClassification(
           rawPositions,
           uciMoves,
-          fens
+          fens,
         );
 
         setCurrentPosition({

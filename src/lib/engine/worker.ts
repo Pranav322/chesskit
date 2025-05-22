@@ -2,11 +2,11 @@ import { EngineWorker } from "@/types/engine";
 
 export const getEngineWorkers = (
   enginePath: string,
-  workersInputNb?: number
+  workersInputNb?: number,
 ): EngineWorker[] => {
   if (workersInputNb !== undefined && workersInputNb < 1) {
     throw new Error(
-      `Number of workers must be greater than 0, got ${workersInputNb} instead`
+      `Number of workers must be greater than 0, got ${workersInputNb} instead`,
     );
   }
 
@@ -15,7 +15,7 @@ export const getEngineWorkers = (
   const maxWorkersNb = Math.max(
     1,
     navigator.hardwareConcurrency - 4,
-    Math.ceil((navigator.hardwareConcurrency * 2) / 3)
+    Math.ceil((navigator.hardwareConcurrency * 2) / 3),
   );
   const deviceMemory =
     "deviceMemory" in navigator && typeof navigator.deviceMemory === "number"

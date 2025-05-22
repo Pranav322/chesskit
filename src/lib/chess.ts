@@ -11,7 +11,7 @@ export const getEvaluateGameParams = (game: Chess): EvaluateGameParams => {
   fens.push(history[history.length - 1].after);
 
   const uciMoves = history.map(
-    (move) => move.from + move.to + (move.promotion || "")
+    (move) => move.from + move.to + (move.promotion || ""),
   );
 
   return { fens, uciMoves };
@@ -21,7 +21,7 @@ export const getGameFromPgn = (pgn: string): Chess => {
   const game = new Chess();
   try {
     game.loadPgn(pgn);
-  } catch (error) {
+  } catch {
     throw new Error("Invalid PGN format");
   }
   return game;
@@ -53,7 +53,12 @@ export const formatGameToDatabase = (game: Chess): Omit<Game, "id"> => {
 export const getGameToSave = (
   game: Chess,
   board: Chess,
-  params: { white?: Player; black?: Player; resigned?: Color; currentUser?: string } = {}
+  params: {
+    white?: Player;
+    black?: Player;
+    resigned?: Color;
+    currentUser?: string;
+  } = {},
 ): Chess => {
   if (game.history().length) return game;
   return setGameHeaders(board, params);
@@ -61,13 +66,18 @@ export const getGameToSave = (
 
 export const setGameHeaders = (
   game: Chess,
-  params: { white?: Player; black?: Player; resigned?: Color; currentUser?: string } = {}
+  params: {
+    white?: Player;
+    black?: Player;
+    resigned?: Color;
+    currentUser?: string;
+  } = {},
 ): Chess => {
   game.setHeader("Event", "Chesskit Game");
   game.setHeader("Site", "Chesskit.org");
   game.setHeader(
     "Date",
-    new Date().toISOString().split("T")[0].replaceAll("-", ".")
+    new Date().toISOString().split("T")[0].replaceAll("-", "."),
   );
 
   const { white, black, resigned, currentUser } = params;
@@ -99,7 +109,7 @@ export const setGameHeaders = (
     game.setHeader("Result", resigned === "w" ? "0-1" : "1-0");
     game.setHeader(
       "Termination",
-      `${resigned === "w" ? blackNameToUse : whiteNameToUse} won by resignation`
+      `${resigned === "w" ? blackNameToUse : whiteNameToUse} won by resignation`,
     );
   }
 
@@ -111,7 +121,7 @@ export const setGameHeaders = (
       "Termination",
       `${
         game.turn() === "w" ? blackNameToUse : whiteNameToUse
-      } won by checkmate`
+      } won by checkmate`,
     );
   }
 
@@ -134,7 +144,7 @@ export const setGameHeaders = (
 };
 
 export const moveLineUciToSan = (
-  fen: string
+  fen: string,
 ): ((moveUci: string) => string) => {
   const game = new Chess(fen);
 
@@ -149,7 +159,7 @@ export const moveLineUciToSan = (
 };
 
 export const getEvaluationBarValue = (
-  position: PositionEval
+  position: PositionEval,
 ): { whiteBarPercentage: number; label: string } => {
   const whiteBarPercentage = getPositionWinPercentage(position);
   const bestLine = position.lines[0];
@@ -183,7 +193,7 @@ export const getWhoIsCheckmated = (fen: string): "w" | "b" | null => {
 };
 
 export const uciMoveParams = (
-  uciMove: string
+  uciMove: string,
 ): {
   from: Square;
   to: Square;
@@ -196,7 +206,7 @@ export const uciMoveParams = (
 
 export const isSimplePieceRecapture = (
   fen: string,
-  uciMoves: [string, string]
+  uciMoves: [string, string],
 ): boolean => {
   const game = new Chess(fen);
   const moves = uciMoves.map((uciMove) => uciMoveParams(uciMove));
@@ -212,7 +222,7 @@ export const isSimplePieceRecapture = (
 export const getIsPieceSacrifice = (
   fen: string,
   playedMove: string,
-  bestLinePvToPlay: string[]
+  bestLinePvToPlay: string[],
 ): boolean => {
   if (!bestLinePvToPlay.length) return false;
 
@@ -240,8 +250,7 @@ export const getIsPieceSacrifice = (
         nonCapturingMovesTemp--;
         if (nonCapturingMovesTemp < 0) break;
       }
-    } catch (e) {
-      console.error(e);
+    } catch {
       return false;
     }
   }
@@ -308,7 +317,7 @@ export const isCheck = (fen: string): boolean => {
 
 export const getCapturedPieces = (
   fen: string,
-  color: Color
+  color: Color,
 ): Record<string, number | undefined> => {
   const capturedPieces: Record<string, number | undefined> = {};
   if (color === Color.White) {
@@ -335,7 +344,7 @@ export const getCapturedPieces = (
 };
 
 export const getLineEvalLabel = (
-  line: Pick<LineEval, "cp" | "mate">
+  line: Pick<LineEval, "cp" | "mate">,
 ): string => {
   if (line.cp !== undefined) {
     return `${line.cp > 0 ? "+" : ""}${(line.cp / 100).toFixed(2)}`;
@@ -387,15 +396,18 @@ export const exportPgnWithAnnotations = (game: Game): string => {
   if (game.notes) {
     // Remove any existing comments at the start to avoid duplication
     pgn = pgn.replace(/^\{[^}]*\}\s*/, "");
-    
+
     // Add the notes as a PGN comment
     const cleanedNotes = game.notes.replace(/[{}]/g, ""); // Remove any existing curly braces
     // Find the position after the header section (after the last "]")
     const lastTagIndex = pgn.lastIndexOf("]");
     if (lastTagIndex !== -1) {
       // Insert notes after the header section and before the moves
-      pgn = pgn.slice(0, lastTagIndex + 1) + 
-        "\n\n{" + cleanedNotes + "}\n\n" + 
+      pgn =
+        pgn.slice(0, lastTagIndex + 1) +
+        "\n\n{" +
+        cleanedNotes +
+        "}\n\n" +
         pgn.slice(lastTagIndex + 1).trim();
     } else {
       pgn = `{${cleanedNotes}}\n\n${pgn}`;
@@ -405,15 +417,15 @@ export const exportPgnWithAnnotations = (game: Game): string => {
   // If there are custom tags, add them as PGN tags
   if (game.tags && game.tags.length > 0) {
     // Convert tags to PGN format
-    const tagSection = game.tags
-      .map((tag) => `[Custom "${tag}"]`)
-      .join("\n");
-    
+    const tagSection = game.tags.map((tag) => `[Custom "${tag}"]`).join("\n");
+
     // Insert tags after the last standard tag and before the moves
     const lastTagIndex = pgn.lastIndexOf("]");
     if (lastTagIndex !== -1) {
-      pgn = pgn.slice(0, lastTagIndex + 1) + 
-        "\n" + tagSection + 
+      pgn =
+        pgn.slice(0, lastTagIndex + 1) +
+        "\n" +
+        tagSection +
         pgn.slice(lastTagIndex + 1);
     }
   }

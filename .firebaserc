@@ -1,6 +1,6 @@
 {
   "projects": {
-    "default": "cheeseeaasy",
+    "default": "chess-vertex",
     "chess-vertex": "chess-vertex"
   },
   "targets": {},

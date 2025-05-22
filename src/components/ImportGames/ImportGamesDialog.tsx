@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -15,11 +15,14 @@ import {
   LinearProgress,
   Typography,
   Box,
-} from '@mui/material';
-import { GameOrigin } from '@/types/enums';
-import { ImportProgress } from '@/types/importedGame';
-import { GameImportService, ImportGameResult } from '@/lib/services/gameImportService';
-import DuplicateGameDialog from './DuplicateGameDialog';
+} from "@mui/material";
+import { GameOrigin } from "@/types/enums";
+import { ImportProgress } from "@/types/importedGame";
+import {
+  GameImportService,
+  ImportGameResult,
+} from "@/lib/services/gameImportService";
+import DuplicateGameDialog from "./DuplicateGameDialog";
 
 interface Props {
   open: boolean;
@@ -29,12 +32,14 @@ interface Props {
 
 export default function ImportGamesDialog({ open, onClose, userId }: Props) {
   const [platform, setPlatform] = useState<GameOrigin>(GameOrigin.Lichess);
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState("");
   const [count, setCount] = useState(10);
   const [autoTag, setAutoTag] = useState(true);
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState<ImportProgress | null>(null);
-  const [duplicateGame, setDuplicateGame] = useState<ImportGameResult | null>(null);
+  const [duplicateGame, setDuplicateGame] = useState<ImportGameResult | null>(
+    null,
+  );
 
   const importService = new GameImportService();
 
@@ -53,24 +58,26 @@ export default function ImportGamesDialog({ open, onClose, userId }: Props) {
           onDuplicateFound: async (result) => {
             setDuplicateGame(result);
             return new Promise((resolve) => {
-              const handleResolution = (resolution: 'skip' | 'overwrite' | 'new') => {
+              const handleResolution = (
+                resolution: "skip" | "overwrite" | "new",
+              ) => {
                 setDuplicateGame(null);
                 resolve(resolution);
               };
 
               // The DuplicateGameDialog will call these handlers
               window.duplicateGameHandlers = {
-                onSkip: () => handleResolution('skip'),
-                onOverwrite: () => handleResolution('overwrite'),
-                onImportAsNew: () => handleResolution('new'),
+                onSkip: () => handleResolution("skip"),
+                onOverwrite: () => handleResolution("overwrite"),
+                onImportAsNew: () => handleResolution("new"),
               };
             });
           },
         },
-        setProgress
+        setProgress,
       );
     } catch (error) {
-      console.error('Import failed:', error);
+      console.error("Import failed:", error);
     } finally {
       setImporting(false);
     }
@@ -88,7 +95,7 @@ export default function ImportGamesDialog({ open, onClose, userId }: Props) {
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle>Import Games</DialogTitle>
         <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 2 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, my: 2 }}>
             <FormControl fullWidth>
               <InputLabel>Platform</InputLabel>
               <Select
@@ -132,12 +139,17 @@ export default function ImportGamesDialog({ open, onClose, userId }: Props) {
             />
 
             {progress && (
-              <Box sx={{ width: '100%' }}>
+              <Box sx={{ width: "100%" }}>
                 <LinearProgress
                   variant="determinate"
                   value={(progress.completed / progress.total) * 100}
                 />
-                <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 1 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  align="center"
+                  sx={{ mt: 1 }}
+                >
                   {progress.completed} / {progress.total} games imported
                   {progress.failed > 0 && ` (${progress.failed} failed)`}
                 </Typography>
@@ -178,4 +190,4 @@ export default function ImportGamesDialog({ open, onClose, userId }: Props) {
       )}
     </>
   );
-} 
+}

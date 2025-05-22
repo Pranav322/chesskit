@@ -3,7 +3,7 @@ import { LineEval, PositionEval } from "@/types/eval";
 
 export const parseEvaluationResults = (
   results: string[],
-  fen: string
+  fen: string,
 ): PositionEval => {
   const parsedResults: PositionEval = {
     lines: [],
@@ -76,7 +76,7 @@ export const sortLines = (a: LineEval, b: LineEval): number => {
 
 export const getResultProperty = (
   result: string,
-  property: string
+  property: string,
 ): string | undefined => {
   const splitResult = result.split(" ");
   const propertyIndex = splitResult.indexOf(property);

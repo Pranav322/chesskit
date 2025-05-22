@@ -25,7 +25,7 @@ export const useChessActions = (chessAtom: PrimitiveAtom<Chess>) => {
       newGame.loadPgn(pgn);
       setGame(newGame);
     },
-    [setGame]
+    [setGame],
   );
 
   const reset = useCallback(
@@ -34,7 +34,7 @@ export const useChessActions = (chessAtom: PrimitiveAtom<Chess>) => {
       if (!params?.noHeaders) setGameHeaders(newGame, params);
       setGame(newGame);
     },
-    [setGame]
+    [setGame],
   );
 
   const copyGame = useCallback(() => {
@@ -44,7 +44,7 @@ export const useChessActions = (chessAtom: PrimitiveAtom<Chess>) => {
       const pgnSplitted = game.pgn().split("]");
       if (
         ["1-0", "0-1", "1/2-1/2", "*"].includes(
-          pgnSplitted.at(-1)?.trim() ?? ""
+          pgnSplitted.at(-1)?.trim() ?? "",
         )
       ) {
         newGame.loadPgn(pgnSplitted.slice(0, -1).join("]") + "]");
@@ -64,7 +64,7 @@ export const useChessActions = (chessAtom: PrimitiveAtom<Chess>) => {
       });
       setGame(newGame);
     },
-    [copyGame, setGame]
+    [copyGame, setGame],
   );
 
   const playMove = useCallback(
@@ -89,7 +89,7 @@ export const useChessActions = (chessAtom: PrimitiveAtom<Chess>) => {
         return null;
       }
     },
-    [copyGame, setGame]
+    [copyGame, setGame],
   );
 
   const addMoves = useCallback(
@@ -101,7 +101,7 @@ export const useChessActions = (chessAtom: PrimitiveAtom<Chess>) => {
       }
       setGame(newGame);
     },
-    [copyGame, setGame]
+    [copyGame, setGame],
   );
 
   const undoMove = useCallback(() => {
@@ -133,7 +133,7 @@ export const useChessActions = (chessAtom: PrimitiveAtom<Chess>) => {
         playGameEndSound();
       }
     },
-    [setGame]
+    [setGame],
   );
 
   return {

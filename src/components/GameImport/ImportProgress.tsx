@@ -16,14 +16,19 @@ import { DuplicateGameDialog } from "./DuplicateGameDialog";
 
 export const ImportProgress: React.FC<{
   progress: ImportProgressType;
-  onDuplicateAction?: (action: "skip" | "overwrite", applyToAll: boolean) => void;
+  onDuplicateAction?: (
+    action: "skip" | "overwrite",
+    applyToAll: boolean,
+  ) => void;
 }> = ({ progress, onDuplicateAction }) => {
   const [startTime] = useState<number>(Date.now());
-  const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState<string>("");
+  const [estimatedTimeRemaining, setEstimatedTimeRemaining] =
+    useState<string>("");
 
-  const percentage = progress.total > 0
-    ? Math.round((progress.completed / progress.total) * 100)
-    : 0;
+  const percentage =
+    progress.total > 0
+      ? Math.round((progress.completed / progress.total) * 100)
+      : 0;
 
   // Calculate estimated time remaining
   useEffect(() => {
@@ -69,7 +74,7 @@ export const ImportProgress: React.FC<{
         return (
           <Icon
             icon="mdi:loading"
-            style={{ 
+            style={{
               fontSize: "2rem",
               color: "warning.main",
               animation: "spin 1s linear infinite",
@@ -123,25 +128,27 @@ export const ImportProgress: React.FC<{
             )}
           </Box>
         </Box>
-        <Tooltip title={`${progress.completed} of ${progress.total} games imported`}>
+        <Tooltip
+          title={`${progress.completed} of ${progress.total} games imported`}
+        >
           <Typography variant="h6" color={getStatusColor()}>
             {percentage}%
           </Typography>
         </Tooltip>
       </Paper>
-      
+
       <Box sx={{ width: "100%", position: "relative" }}>
         <LinearProgress
           variant="determinate"
           value={percentage}
           color={progress.status === "completed" ? "success" : "primary"}
-          sx={{ 
+          sx={{
             height: 8,
             borderRadius: 4,
             backgroundColor: "rgba(0, 0, 0, 0.1)",
             "& .MuiLinearProgress-bar": {
               borderRadius: 4,
-            }
+            },
           }}
         />
         <Typography
@@ -169,8 +176,8 @@ export const ImportProgress: React.FC<{
               borderRadius: 2,
             }}
           >
-            <Box 
-              sx={{ 
+            <Box
+              sx={{
                 display: "flex",
                 justifyContent: "space-between",
                 mb: 1,
@@ -179,7 +186,7 @@ export const ImportProgress: React.FC<{
               <Typography variant="body1" color="text.secondary">
                 Total
               </Typography>
-              <Icon 
+              <Icon
                 icon="mdi:database"
                 style={{ fontSize: "1.5rem", color: "text.secondary" }}
               />
@@ -201,8 +208,8 @@ export const ImportProgress: React.FC<{
               borderStyle: "solid",
             }}
           >
-            <Box 
-              sx={{ 
+            <Box
+              sx={{
                 display: "flex",
                 justifyContent: "space-between",
                 mb: 1,
@@ -211,7 +218,7 @@ export const ImportProgress: React.FC<{
               <Typography variant="body1" color="success.main">
                 Imported
               </Typography>
-              <Icon 
+              <Icon
                 icon="mdi:check-circle"
                 style={{ fontSize: "1.5rem", color: "success.main" }}
               />
@@ -236,8 +243,8 @@ export const ImportProgress: React.FC<{
               borderStyle: "solid",
             }}
           >
-            <Box 
-              sx={{ 
+            <Box
+              sx={{
                 display: "flex",
                 justifyContent: "space-between",
                 mb: 1,
@@ -246,7 +253,7 @@ export const ImportProgress: React.FC<{
               <Typography variant="body1" color="warning.main">
                 Duplicates
               </Typography>
-              <Icon 
+              <Icon
                 icon="mdi:content-copy"
                 style={{ fontSize: "1.5rem", color: "warning.main" }}
               />
@@ -258,11 +265,11 @@ export const ImportProgress: React.FC<{
         </Grid>
       </Grid>
 
-      {progress.currentDuplicate && (
+      {progress.currentDuplicate && onDuplicateAction && (
         <DuplicateGameDialog
-          open={Boolean(progress.currentDuplicate)}
+          open={true}
           gameId={progress.currentDuplicate.gameId}
-          onClose={() => onDuplicateAction?.("skip", false)}
+          onClose={() => onDuplicateAction("skip", false)}
           onAction={onDuplicateAction}
         />
       )}
@@ -282,4 +289,4 @@ export const ImportProgress: React.FC<{
       )}
     </Box>
   );
-}; 
+};

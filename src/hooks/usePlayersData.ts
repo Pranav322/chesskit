@@ -6,7 +6,7 @@ import { getChessComUserAvatar } from "@/lib/chessCom";
 import { Player } from "@/types/game";
 
 export const usePlayersData = (
-  gameAtom: PrimitiveAtom<Chess>
+  gameAtom: PrimitiveAtom<Chess>,
 ): { white: Player; black: Player } => {
   const game = useAtomValue(gameAtom);
   const { gameFromUrl } = useGameDatabase();
@@ -30,12 +30,12 @@ export const usePlayersData = (
 
   const whiteAvatarUrl = usePlayerAvatarUrl(
     whiteName,
-    isChessCom && !!whiteName && whiteName !== "White"
+    isChessCom && !!whiteName && whiteName !== "White",
   );
 
   const blackAvatarUrl = usePlayerAvatarUrl(
     blackName,
-    isChessCom && !!blackName && blackName !== "Black"
+    isChessCom && !!blackName && blackName !== "Black",
   );
 
   return {
@@ -54,7 +54,7 @@ export const usePlayersData = (
 
 const usePlayerAvatarUrl = (
   playerName: string,
-  enabled: boolean
+  enabled: boolean,
 ): string | null | undefined => {
   const { data: avatarUrl } = useQuery({
     queryKey: ["CCAvatar", playerName],

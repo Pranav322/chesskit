@@ -1,0 +1,38 @@
+# Dependencies
+node_modules
+npm-debug.log
+
+# Next.js build output
+.next
+
+# Git
+.git
+.gitignore
+
+# Environment (we'll copy .env.local specifically in Dockerfile)
+.env*
+!.env.local
+
+# Firebase cache
+.firebase
+
+# Development files
+*.md
+*.log
+.vscode
+.idea
+*.iml
+
+# Test files
+cypress
+__tests__
+*.test.*
+*.spec.*
+
+# CDK
+cdk
+cdk.out
+
+# Other
+.DS_Store
+*.pem 

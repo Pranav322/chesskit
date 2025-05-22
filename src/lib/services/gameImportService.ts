@@ -1,20 +1,20 @@
-import { GameImportOptions, ImportProgress } from '@/types/importedGame';
-import { GameOrigin } from '@/types/enums';
-import { LichessAPI } from '../api/lichessAPI';
-import { ChessComAPI } from '../api/chessComAPI';
-import { ChessPlatformAPI } from '../api/types';
-import { FirestoreService } from './firestore';
-import { ImportedGameData } from '@/types/database';
-import { Timestamp } from 'firebase/firestore';
-import { AutoTagService } from './autoTagService';
-import { checkForDuplicate, DuplicateCheckResult } from './duplicateGameService';
+import { GameImportOptions, ImportProgress } from "@/types/importedGame";
+import { GameOrigin } from "@/types/enums";
+import { LichessAPI } from "../api/lichessAPI";
+import { ChessComAPI } from "../api/chessComAPI";
+import { ChessPlatformAPI } from "../api/types";
+import { FirestoreService } from "./firestore";
+import { ImportedGameData } from "@/types/database";
+import { Timestamp } from "firebase/firestore";
+import { AutoTagService } from "./autoTagService";
+import { DuplicateCheckResult } from "./duplicateGameService";
 
 export interface ImportGameResult {
-  gameData: Omit<ImportedGameData, 'id'>;
+  gameData: Omit<ImportedGameData, "id">;
   duplicateCheck?: DuplicateCheckResult & { existingGame?: ImportedGameData };
 }
 
-export type DuplicateResolution = 'skip' | 'overwrite' | 'new';
+export type DuplicateResolution = "skip" | "overwrite" | "new";
 
 export interface ImportGameOptions extends GameImportOptions {
   onDuplicateFound?: (result: ImportGameResult) => Promise<DuplicateResolution>;
@@ -40,15 +40,23 @@ export class GameImportService {
       case GameOrigin.ChessCom:
         return this.chessComAPI;
       default:
-        throw new Error('Unsupported platform');
+        throw new Error("Unsupported platform");
     }
   }
 
-  private async checkExistingGame(userId: string, platform: GameOrigin, originalId: string): Promise<ImportedGameData | null> {
+  private async checkExistingGame(
+    userId: string,
+    platform: GameOrigin,
+    originalId: string,
+  ): Promise<ImportedGameData | null> {
     try {
-      return await this.firestoreService.findGameByOriginalId(userId, platform, originalId);
+      return await this.firestoreService.findGameByOriginalId(
+        userId,
+        platform,
+        originalId,
+      );
     } catch (error) {
-      console.error('Error checking existing game:', error);
+      console.error("Error checking existing game:", error);
       return null;
     }
   }
@@ -56,17 +64,22 @@ export class GameImportService {
   private generateOriginalId(platform: GameOrigin, game: any): string {
     // Generate a consistent originalId based on platform and game data
     switch (platform) {
-      case GameOrigin.Lichess:
+      case GameOrigin.Lichess: {
         // Lichess games have a consistent ID format
         return `lichess-${game.id}`;
-      case GameOrigin.ChessCom:
+      }
+      case GameOrigin.ChessCom: {
         // Chess.com games need a more complex ID due to their format
-        const gameDate = new Date(game.end_time || game.lastMoveAt || game.createdAt);
-        const players = `${game.white?.username || ''}-vs-${game.black?.username || ''}`;
-        return `chesscom-${gameDate.toISOString()}-${players}-${game.id || ''}`;
-      default:
+        const gameDate = new Date(
+          game.end_time || game.lastMoveAt || game.createdAt,
+        );
+        const players = `${game.white?.username || ""}-vs-${game.black?.username || ""}`;
+        return `chesscom-${gameDate.toISOString()}-${players}-${game.id || ""}`;
+      }
+      default: {
         // Fallback for unknown platforms
         return `${platform}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      }
     }
   }
 
@@ -74,7 +87,7 @@ export class GameImportService {
     userId: string,
     username: string,
     options: ImportGameOptions,
-    onProgress: (progress: ImportProgress) => void
+    onProgress: (progress: ImportProgress) => void,
   ) {
     const api = this.getAPI(options.platform);
 
@@ -101,7 +114,7 @@ export class GameImportService {
         username,
         autoTag: options.autoTag,
         backgroundImport: options.backgroundImport,
-      }
+      },
     );
 
     // Start import
@@ -115,7 +128,7 @@ export class GameImportService {
 
     try {
       const { games, error } = await api.fetchGames(username, options.count);
-      
+
       if (error) {
         throw new Error(error);
       }
@@ -123,12 +136,12 @@ export class GameImportService {
       // Get existing games for similarity checking
       const existingGames = await this.firestoreService.getUserGames(userId, {
         source: options.platform,
-        limit: 1000 // Increase limit to check against more games
+        limit: 1000, // Increase limit to check against more games
       });
-      
+
       // Create a map of existing originalIds for quick lookup
       const existingOriginalIds = new Map(
-        existingGames.map(g => [g.originalId, g])
+        existingGames.map((g) => [g.originalId, g]),
       );
 
       // Process games in chunks to avoid overwhelming Firestore
@@ -139,11 +152,11 @@ export class GameImportService {
 
       for (let i = 0; i < games.length; i += chunkSize) {
         const chunk = games.slice(i, i + chunkSize);
-        
+
         for (const game of chunk) {
           try {
             // Generate a consistent originalId
-            let originalId = this.generateOriginalId(options.platform, game);
+            const originalId = this.generateOriginalId(options.platform, game);
             let shouldOverwrite = false;
             let shouldSkip = false;
 
@@ -151,9 +164,9 @@ export class GameImportService {
             const existingGame = existingOriginalIds.get(originalId);
             if (existingGame) {
               duplicates++;
-              
+
               // Update progress with current duplicate
-              onProgress(prev => ({
+              onProgress((prev) => ({
                 ...prev,
                 duplicates,
                 currentDuplicate: {
@@ -173,7 +186,7 @@ export class GameImportService {
                     shouldOverwrite = true;
                     break;
                 }
-              } 
+              }
               // Otherwise, ask user what to do
               else if (options.onDuplicateFound) {
                 const result = await options.onDuplicateFound({
@@ -209,17 +222,18 @@ export class GameImportService {
               }
 
               // Clear current duplicate from progress
-              onProgress(prev => ({
+              onProgress((prev) => ({
                 ...prev,
                 currentDuplicate: undefined,
               }));
             }
 
             if (shouldSkip) {
-              onProgress(prev => ({
+              onProgress((prev) => ({
                 ...prev,
                 completed: prev.completed + 1,
-                status: prev.completed + 1 >= prev.total ? "completed" : "importing",
+                status:
+                  prev.completed + 1 >= prev.total ? "completed" : "importing",
               }));
               continue;
             }
@@ -230,7 +244,7 @@ export class GameImportService {
               autoTags = await this.autoTagService.tagGame(game.pgn);
             }
 
-            const gameData: Omit<ImportedGameData, 'id'> = {
+            const gameData: Omit<ImportedGameData, "id"> = {
               userId,
               source: options.platform,
               originalId,
@@ -242,11 +256,11 @@ export class GameImportService {
                 opening: autoTags?.opening,
                 result: this.extractResult(game.pgn),
                 white: {
-                  name: game.white?.username || 'Unknown',
+                  name: game.white?.username || "Unknown",
                   rating: game.white?.rating,
                 },
                 black: {
-                  name: game.black?.username || 'Unknown',
+                  name: game.black?.username || "Unknown",
                   rating: game.black?.rating,
                 },
               },
@@ -256,40 +270,45 @@ export class GameImportService {
 
             try {
               // Save or update the game using transaction
-              await this.firestoreService.saveOrUpdateGame(gameData, shouldOverwrite);
-              
+              await this.firestoreService.saveOrUpdateGame(
+                gameData,
+                shouldOverwrite,
+              );
+
               // Update progress
               await this.firestoreService.updateImportProgress(progressId, {
                 completedGames: i + 1,
-                status: i + 1 >= games.length ? 'completed' : 'importing',
+                status: i + 1 >= games.length ? "completed" : "importing",
               });
 
-              onProgress(prev => ({
+              onProgress((prev) => ({
                 ...prev,
                 completed: prev.completed + 1,
-                status: prev.completed + 1 >= prev.total ? 'completed' : 'importing',
+                status:
+                  prev.completed + 1 >= prev.total ? "completed" : "importing",
               }));
             } catch (error) {
               console.error(`Failed to save game ${originalId}:`, error);
               throw error;
             }
           } catch (error) {
-            if (error.message?.includes('already exists')) {
+            if (error.message?.includes("already exists")) {
               // Silently skip duplicates that weren't caught earlier
               skipped++;
               duplicates++;
-              onProgress(prev => ({
+              onProgress((prev) => ({
                 ...prev,
                 completed: prev.completed + 1,
-                status: prev.completed + 1 >= prev.total ? 'completed' : 'importing',
+                status:
+                  prev.completed + 1 >= prev.total ? "completed" : "importing",
               }));
             } else {
-              console.error('Error processing game:', error);
+              console.error("Error processing game:", error);
               await this.firestoreService.updateImportProgress(progressId, {
                 failedGames: i + 1,
               });
 
-              onProgress(prev => ({
+              onProgress((prev) => ({
                 ...prev,
                 failed: prev.failed + 1,
               }));
@@ -302,45 +321,47 @@ export class GameImportService {
       await this.firestoreService.createImportHistory(
         userId,
         options.platform,
-        'completed',
+        "completed",
         {
           totalGames: games.length,
           completedGames: games.length - skipped,
           failedGames: 0,
           duplicates, // Add duplicate count to history
-        }
+        },
       );
 
-      onProgress(prev => ({
+      onProgress((prev) => ({
         ...prev,
-        status: 'completed',
+        status: "completed",
         completed: games.length - skipped,
         duplicates, // Add duplicate count to progress
       }));
     } catch (error) {
       // Update import progress as failed
       await this.firestoreService.updateImportProgress(progressId, {
-        status: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        status: "failed",
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
       });
 
       // Create failed import history record
       await this.firestoreService.createImportHistory(
         userId,
         options.platform,
-        'failed',
+        "failed",
         {
           totalGames: options.count,
           completedGames: 0,
           failedGames: options.count,
         },
-        error instanceof Error ? error.message : 'Unknown error occurred'
+        error instanceof Error ? error.message : "Unknown error occurred",
       );
 
-      onProgress(prev => ({
+      onProgress((prev) => ({
         ...prev,
-        status: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        status: "failed",
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
       }));
     }
   }
@@ -349,4 +370,4 @@ export class GameImportService {
     const resultMatch = pgn.match(/\[Result "(.*?)"\]/);
     return resultMatch ? resultMatch[1] : undefined;
   }
-} 
+}

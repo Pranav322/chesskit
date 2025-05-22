@@ -37,7 +37,7 @@ export default function AnalysisTab(props: GridProps) {
       boardHistory.join() === gameHistory.join());
 
   const linesSkeleton: LineEval[] = Array.from({ length: linesNumber }).map(
-    (_, i) => ({ pv: [`${i}`], depth: 0, multiPv: i + 1 })
+    (_, i) => ({ pv: [`${i}`], depth: 0, multiPv: i + 1 }),
   );
 
   const engineLines = position?.eval?.lines?.length
