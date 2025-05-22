@@ -18,8 +18,12 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
+// DEBUG LOG — remove after testing
+console.log("API KEY at runtime:", process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
+
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+
 const auth = getAuth(app);
 const db = getFirestore(app);
 
